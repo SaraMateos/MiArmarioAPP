@@ -1,6 +1,5 @@
 import 'auto_framed_photo.dart';
 import 'backup_screen.dart';
-import 'recommendation_service.dart';
 import 'daily_tools_screen.dart';
 import 'weather_service.dart';
 import 'advanced_tools_screen.dart';

@@ -3,7 +3,7 @@ description: Armario personal y outfits sin conexión para Android.
 publish_to: none
 version: 1.7.7+15
 environment:
-  sdk: '>=3.13.0 <4.0.0'
+  sdk: ">=3.13.0 <4.0.0"
 dependencies:
   flutter:
     sdk: flutter
