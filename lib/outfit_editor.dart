@@ -233,71 +233,86 @@ class _OutfitEditorState extends State<OutfitEditor> {
                 onSelectionChanged: (values) => switchView(values.first),
               ),
               const SizedBox(height: 16),
-              Stack(
-                children: [
-                  OutfitBoard(
-                    repo: widget.repo,
-                    garments: widget.garments,
-                    items: visibleItems,
-                    showFigure: mannequinView,
-                    selected: selected,
-                    onSelect: (i) => setState(() => selected = i),
-                    onMove: (i, dx, dy) => setState(() {
-                      visibleItems[i].x = (visibleItems[i].x + dx).clamp(0.0, 1.0);
-                      visibleItems[i].y = (visibleItems[i].y + dy).clamp(0.0, 1.0);
-                    }),
-                  ),
-                  if (!mannequinView && selected != null && selected! < visibleItems.length)
-                    Positioned(
-                      left: 8, right: 8, bottom: 8,
-                      child: Material(
-                        color: Theme.of(context).colorScheme.surface.withValues(alpha: .96),
-                        elevation: 5,
-                        borderRadius: BorderRadius.circular(18),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          child: Column(mainAxisSize: MainAxisSize.min, children: [
-                            Row(children: [
-                              const Icon(Icons.open_with, size: 18),
-                              const SizedBox(width: 4),
-                              const Text('Tamaño'),
-                              Expanded(child: Slider(
-                                min: .5, max: 1.6,
-                                value: visibleItems[selected!].scale.clamp(.5, 1.6),
-                                onChanged: (v) => setState(() => visibleItems[selected!].scale = v),
-                              )),
-                              IconButton(
-                                tooltip: 'Eliminar prenda del outfit',
-                                onPressed: () => setState(() {
-                                  items.removeAt(selected!);
-                                  mannequinItems.removeAt(selected!);
-                                  selected = null;
-                                }),
-                                icon: const Icon(Icons.delete_outline, color: Colors.red),
-                              ),
-                            ]),
-                            Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-                              TextButton.icon(onPressed: () => setState(() {
-                                final i = selected!;
-                                final free = items.removeAt(i);
-                                final figure = mannequinItems.removeAt(i);
-                                items.add(free); mannequinItems.add(figure);
-                                selected = items.length - 1;
-                              }), icon: const Icon(Icons.flip_to_front, size: 18), label: const Text('Al frente')),
-                              TextButton.icon(onPressed: () => setState(() {
-                                final item = visibleItems.removeAt(selected!);
-                                visibleItems.insert(0, item); selected = 0;
-                              }), icon: const Icon(Icons.vertical_align_bottom, size: 18), label: const Text('Al fondo')),
-                              TextButton.icon(onPressed: () => setState(() {
-                                visibleItems[selected!].x = .5; visibleItems[selected!].y = .5;
-                              }), icon: const Icon(Icons.center_focus_strong, size: 18), label: const Text('Centrar')),
-                            ]),
-                          ]),
-                        ),
-                      ),
-                    ),
-                ],
+              OutfitBoard(
+                repo: widget.repo,
+                garments: widget.garments,
+                items: visibleItems,
+                showFigure: mannequinView,
+                selected: selected,
+                onSelect: (i) => setState(() => selected = i),
+                onMove: (i, dx, dy) => setState(() {
+                  visibleItems[i].x = (visibleItems[i].x + dx).clamp(0.0, 1.0);
+                  visibleItems[i].y = (visibleItems[i].y + dy).clamp(0.0, 1.0);
+                }),
               ),
+              if (!mannequinView && selected != null && selected! < visibleItems.length) ...[
+                const SizedBox(height: 10),
+                Card(
+                  margin: EdgeInsets.zero,
+                  elevation: 1,
+                  color: Theme.of(context).colorScheme.surfaceContainerLow,
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      Row(children: [
+                        const Icon(Icons.open_with, size: 18),
+                        const SizedBox(width: 6),
+                        const Text('Tamaño'),
+                        Expanded(child: Slider(
+                          min: .5, max: 1.6,
+                          value: visibleItems[selected!].scale.clamp(.5, 1.6),
+                          onChanged: (v) => setState(() => visibleItems[selected!].scale = v),
+                        )),
+                        IconButton(
+                          tooltip: 'Eliminar prenda',
+                          visualDensity: VisualDensity.compact,
+                          onPressed: () => setState(() {
+                            items.removeAt(selected!);
+                            mannequinItems.removeAt(selected!);
+                            selected = null;
+                          }),
+                          icon: const Icon(Icons.delete_outline, color: Colors.red),
+                        ),
+                      ]),
+                      Wrap(
+                        alignment: WrapAlignment.spaceEvenly,
+                        spacing: 4,
+                        children: [
+                          TextButton.icon(
+                            onPressed: () => setState(() {
+                              visibleItems[selected!].x = .5;
+                              visibleItems[selected!].y = .5;
+                            }),
+                            icon: const Icon(Icons.center_focus_strong, size: 18),
+                            label: const Text('Centrar'),
+                          ),
+                          TextButton.icon(
+                            onPressed: () => setState(() {
+                              final i = selected!;
+                              final free = items.removeAt(i);
+                              final figure = mannequinItems.removeAt(i);
+                              items.add(free);
+                              mannequinItems.add(figure);
+                              selected = items.length - 1;
+                            }),
+                            icon: const Icon(Icons.flip_to_front, size: 18),
+                            label: const Text('Al frente'),
+                          ),
+                          TextButton.icon(
+                            onPressed: () => setState(() {
+                              final item = visibleItems.removeAt(selected!);
+                              visibleItems.insert(0, item);
+                              selected = 0;
+                            }),
+                            icon: const Icon(Icons.vertical_align_bottom, size: 18),
+                            label: const Text('Al fondo'),
+                          ),
+                        ],
+                      ),
+                    ]),
+                  ),
+                ),
+              ],
               if (!mannequinView && items.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 Text('Prendas', style: Theme.of(context).textTheme.titleSmall),
