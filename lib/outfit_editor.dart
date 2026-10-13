@@ -224,27 +224,6 @@ class _OutfitEditorState extends State<OutfitEditor> {
                 style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
-              if (!mannequinView && items.isNotEmpty) ...[
-                Text('Selecciona una prenda', style: Theme.of(context).textTheme.titleSmall),
-                const SizedBox(height: 6),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 6,
-                  children: [
-                    for (var i = 0; i < items.length; i++)
-                      Builder(builder: (context) {
-                        final garment = widget.garments.where((g) => g.id == items[i].garmentId).firstOrNull;
-                        return ChoiceChip(
-                          label: Text(garment?.name ?? 'Prenda ${i + 1}', overflow: TextOverflow.ellipsis),
-                          selected: selected == i,
-                          onSelected: (_) => setState(() => selected = i),
-                          avatar: Icon(selected == i ? Icons.check_circle : Icons.checkroom, size: 18),
-                        );
-                      }),
-                  ],
-                ),
-                const SizedBox(height: 10),
-              ],
               SegmentedButton<bool>(
                 segments: const [
                   ButtonSegment(value: false, icon: Icon(Icons.dashboard_customize_outlined), label: Text('Libre')),
@@ -254,18 +233,90 @@ class _OutfitEditorState extends State<OutfitEditor> {
                 onSelectionChanged: (values) => switchView(values.first),
               ),
               const SizedBox(height: 16),
-              OutfitBoard(
-                repo: widget.repo,
-                garments: widget.garments,
-                items: visibleItems,
-                showFigure: mannequinView,
-                selected: selected,
-                onSelect: (i) => setState(() => selected = i),
-                onMove: (i, dx, dy) => setState(() {
-                  visibleItems[i].x = (visibleItems[i].x + dx).clamp(0.0, 1.0);
-                  visibleItems[i].y = (visibleItems[i].y + dy).clamp(0.0, 1.0);
-                }),
+              Stack(
+                children: [
+                  OutfitBoard(
+                    repo: widget.repo,
+                    garments: widget.garments,
+                    items: visibleItems,
+                    showFigure: mannequinView,
+                    selected: selected,
+                    onSelect: (i) => setState(() => selected = i),
+                    onMove: (i, dx, dy) => setState(() {
+                      visibleItems[i].x = (visibleItems[i].x + dx).clamp(0.0, 1.0);
+                      visibleItems[i].y = (visibleItems[i].y + dy).clamp(0.0, 1.0);
+                    }),
+                  ),
+                  if (!mannequinView && selected != null && selected! < visibleItems.length)
+                    Positioned(
+                      left: 8, right: 8, bottom: 8,
+                      child: Material(
+                        color: Theme.of(context).colorScheme.surface.withValues(alpha: .96),
+                        elevation: 5,
+                        borderRadius: BorderRadius.circular(18),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          child: Column(mainAxisSize: MainAxisSize.min, children: [
+                            Row(children: [
+                              const Icon(Icons.open_with, size: 18),
+                              const SizedBox(width: 4),
+                              const Text('Tamaño'),
+                              Expanded(child: Slider(
+                                min: .5, max: 1.6,
+                                value: visibleItems[selected!].scale.clamp(.5, 1.6),
+                                onChanged: (v) => setState(() => visibleItems[selected!].scale = v),
+                              )),
+                              IconButton(
+                                tooltip: 'Eliminar prenda del outfit',
+                                onPressed: () => setState(() {
+                                  items.removeAt(selected!);
+                                  mannequinItems.removeAt(selected!);
+                                  selected = null;
+                                }),
+                                icon: const Icon(Icons.delete_outline, color: Colors.red),
+                              ),
+                            ]),
+                            Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
+                              TextButton.icon(onPressed: () => setState(() {
+                                final i = selected!;
+                                final free = items.removeAt(i);
+                                final figure = mannequinItems.removeAt(i);
+                                items.add(free); mannequinItems.add(figure);
+                                selected = items.length - 1;
+                              }), icon: const Icon(Icons.flip_to_front, size: 18), label: const Text('Al frente')),
+                              TextButton.icon(onPressed: () => setState(() {
+                                final item = visibleItems.removeAt(selected!);
+                                visibleItems.insert(0, item); selected = 0;
+                              }), icon: const Icon(Icons.vertical_align_bottom, size: 18), label: const Text('Al fondo')),
+                              TextButton.icon(onPressed: () => setState(() {
+                                visibleItems[selected!].x = .5; visibleItems[selected!].y = .5;
+                              }), icon: const Icon(Icons.center_focus_strong, size: 18), label: const Text('Centrar')),
+                            ]),
+                          ]),
+                        ),
+                      ),
+                    ),
+                ],
               ),
+              if (!mannequinView && items.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                Text('Prendas', style: Theme.of(context).textTheme.titleSmall),
+                const SizedBox(height: 6),
+                SizedBox(height: 48, child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: items.length,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (context, i) {
+                    final garment = widget.garments.where((g) => g.id == items[i].garmentId).firstOrNull;
+                    return ChoiceChip(
+                      label: Text(garment?.name ?? 'Prenda ${i + 1}', overflow: TextOverflow.ellipsis),
+                      selected: selected == i,
+                      onSelected: (_) => setState(() => selected = i),
+                      avatar: Icon(selected == i ? Icons.check_circle : Icons.checkroom, size: 18),
+                    );
+                  },
+                )),
+              ],
               const SizedBox(height: 12),
               if (mannequinView) OutlinedButton.icon(
                 onPressed: items.isEmpty ? null : arrangeOnFigure,
@@ -278,65 +329,6 @@ class _OutfitEditorState extends State<OutfitEditor> {
                 icon: const Icon(Icons.add),
                 label: const Text('Añadir prenda'),
               ),
-              if (selected != null && selected! < items.length) ...[
-                Row(
-                  children: [
-                    const Icon(Icons.open_with, size: 18),
-                    const SizedBox(width: 6),
-                    const Text('Tamaño'),
-                    Expanded(
-                      child: Slider(
-                        min: .5,
-                        max: 1.6,
-                        value: visibleItems[selected!].scale,
-                        onChanged: (v) =>
-                            setState(() => visibleItems[selected!].scale = v),
-                      ),
-                    ),
-                    IconButton(
-                      tooltip: 'Eliminar prenda del outfit',
-                      onPressed: () => setState(() {
-                        items.removeAt(selected!);
-                        mannequinItems.removeAt(selected!);
-                        selected = null;
-                      }),
-                      icon: const Icon(Icons.delete_outline, color: Colors.red),
-                    ),
-                  ],
-                ),
-                TextButton.icon(
-                  onPressed: () => setState(() {
-                    final index = selected!;
-                    final free = items.removeAt(index);
-                    final figure = mannequinItems.removeAt(index);
-                    items.add(free);
-                    mannequinItems.add(figure);
-                    selected = items.length - 1;
-                  }),
-                  icon: const Icon(Icons.flip_to_front),
-                  label: const Text('Traer al frente'),
-                ),
-              ],
-              if (!mannequinView && selected != null && selected! < visibleItems.length) ...[
-                TextButton.icon(
-                  onPressed: () => setState(() {
-                    final item = visibleItems.removeAt(selected!);
-                    visibleItems.insert(0, item);
-                    selected = 0;
-                  }),
-                  icon: const Icon(Icons.vertical_align_top),
-                  label: const Text('Enviar al fondo'),
-                ),
-                TextButton.icon(
-                  onPressed: () => setState(() {
-                    final item = visibleItems[selected!];
-                    item.x = .5;
-                    item.y = .5;
-                  }),
-                  icon: const Icon(Icons.center_focus_strong),
-                  label: const Text('Centrar prenda'),
-                ),
-              ],
               const SizedBox(height: 16),
               const Text('Foto del outfit puesto (opcional)'),
               if (pendingReference != null ||
