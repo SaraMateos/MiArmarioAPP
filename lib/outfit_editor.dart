@@ -224,6 +224,27 @@ class _OutfitEditorState extends State<OutfitEditor> {
                 style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
+              if (!mannequinView && items.isNotEmpty) ...[
+                Text('Selecciona una prenda', style: Theme.of(context).textTheme.titleSmall),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    for (var i = 0; i < items.length; i++)
+                      Builder(builder: (context) {
+                        final garment = widget.garments.where((g) => g.id == items[i].garmentId).firstOrNull;
+                        return ChoiceChip(
+                          label: Text(garment?.name ?? 'Prenda ${i + 1}', overflow: TextOverflow.ellipsis),
+                          selected: selected == i,
+                          onSelected: (_) => setState(() => selected = i),
+                          avatar: Icon(selected == i ? Icons.check_circle : Icons.checkroom, size: 18),
+                        );
+                      }),
+                  ],
+                ),
+                const SizedBox(height: 10),
+              ],
               SegmentedButton<bool>(
                 segments: const [
                   ButtonSegment(value: false, icon: Icon(Icons.dashboard_customize_outlined), label: Text('Libre')),
@@ -294,6 +315,26 @@ class _OutfitEditorState extends State<OutfitEditor> {
                   }),
                   icon: const Icon(Icons.flip_to_front),
                   label: const Text('Traer al frente'),
+                ),
+              ],
+              if (!mannequinView && selected != null && selected! < visibleItems.length) ...[
+                TextButton.icon(
+                  onPressed: () => setState(() {
+                    final item = visibleItems.removeAt(selected!);
+                    visibleItems.insert(0, item);
+                    selected = 0;
+                  }),
+                  icon: const Icon(Icons.vertical_align_top),
+                  label: const Text('Enviar al fondo'),
+                ),
+                TextButton.icon(
+                  onPressed: () => setState(() {
+                    final item = visibleItems[selected!];
+                    item.x = .5;
+                    item.y = .5;
+                  }),
+                  icon: const Icon(Icons.center_focus_strong),
+                  label: const Text('Centrar prenda'),
                 ),
               ],
               const SizedBox(height: 16),
