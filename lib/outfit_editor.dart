@@ -320,7 +320,7 @@ class _OutfitEditorState extends State<OutfitEditor> {
                 SizedBox(height: 48, child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: items.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  separatorBuilder: (_, _) => const SizedBox(width: 8),
                   itemBuilder: (context, i) {
                     final garment = widget.garments.where((g) => g.id == items[i].garmentId).firstOrNull;
                     return ChoiceChip(
