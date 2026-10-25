@@ -85,7 +85,15 @@ void main() {
       PaintingBinding.instance.imageCache.clear();
       PaintingBinding.instance.imageCache.clearLiveImages();
       await repo.close();
-      await root.delete(recursive: true);
+      for (var attempt = 0; attempt < 4; attempt++) {
+        try {
+          if (await root.exists()) await root.delete(recursive: true);
+          break;
+        } on FileSystemException {
+          if (attempt == 3) rethrow;
+          await Future<void>.delayed(const Duration(milliseconds: 150));
+        }
+      }
     });
   }
 
@@ -327,7 +335,11 @@ void main() {
       await prepare(t);
       await launch(t, GarmentEditor(repo: repo, garment: garment));
       await t.pumpAndSettle();
-      await t.tap(find.byType(Image).first);
+      final photoTap = find.ancestor(
+        of: find.byType(AutoFramedPhoto).first,
+        matching: find.byType(InkWell),
+      ).first;
+      await t.tap(photoTap);
       await t.pumpAndSettle();
       expect(find.text('Revisar foto'), findsOneWidget);
       expect(
