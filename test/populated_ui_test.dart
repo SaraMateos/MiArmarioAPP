@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mi_armario/home.dart';
+import 'package:mi_armario/auto_framed_photo.dart';
 import 'package:mi_armario/models.dart';
 import 'package:mi_armario/repository.dart';
 import 'package:mi_armario/ui_common.dart';
@@ -143,7 +144,7 @@ void main() {
     await tester.tap(find.text('Un día tranquilo'));
     await tester.pumpAndSettle();
     await capture('editor');
-    await tester.tap(find.byType(Photo).first);
+    await tester.tap(find.byType(AutoFramedPhoto).first);
     await tester.drag(find.byType(Photo).first, const Offset(80, 45));
     await tester.pumpAndSettle();
     expect(find.byType(Slider), findsOneWidget);
