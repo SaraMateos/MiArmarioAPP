@@ -572,7 +572,52 @@ class _GarmentEditorState extends State<GarmentEditor> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
+                _compactSection(
+                  title: 'Herramientas de fotografía',
+                  subtitle: 'Recortar, detectar y mejorar la imagen',
+                  icon: Icons.auto_fix_high_outlined,
+                  children: [
+                if (path != null)
+                  TextButton.icon(
+                    onPressed: crop,
+                    icon: const Icon(Icons.crop),
+                    label: const Text('Recortar / girar foto'),
+                  ),
+                if (path != null) ...[
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: analyze,
+                        icon: const Icon(Icons.auto_awesome_outlined),
+                        label: const Text('Detectar datos'),
+                      ),
+                      OutlinedButton.icon(
+                        onPressed: correctCutout,
+                        icon: const Icon(Icons.brush),
+                        label: const Text('Corregir con pincel'),
+                      ),
+                      OutlinedButton(
+                        onPressed: () => removeBackground(false),
+                        child: const Text('Quitar fondo · prenda sola'),
+                      ),
+                      OutlinedButton(
+                        onPressed: () => removeBackground(true),
+                        child: const Text('Aislar ropa · puesta'),
+                      ),
+                    ],
+                  ),
+                  const Padding(
+                    padding: EdgeInsets.only(top: 8),
+                    child: Text(
+                      'Si hay varias prendas, recorta la que quieras guardar.',
+                    ),
+                  ),
+                ],
+                  ],
+                ),
+                const SizedBox(height: 12),
                 TextFormField(
                   controller: name,
                   onChanged: (_) => automaticName = false,
@@ -680,50 +725,6 @@ class _GarmentEditorState extends State<GarmentEditor> {
                     label: const Text('Confirmar tipo de prenda'),
                   ),
                 const SizedBox(height: 12),
-                _compactSection(
-                  title: 'Herramientas de fotografía',
-                  subtitle: 'Recortar, detectar y mejorar la imagen',
-                  icon: Icons.auto_fix_high_outlined,
-                  children: [
-                if (path != null)
-                  TextButton.icon(
-                    onPressed: crop,
-                    icon: const Icon(Icons.crop),
-                    label: const Text('Recortar / girar foto'),
-                  ),
-                if (path != null) ...[
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      OutlinedButton.icon(
-                        onPressed: analyze,
-                        icon: const Icon(Icons.auto_awesome_outlined),
-                        label: const Text('Detectar datos'),
-                      ),
-                      OutlinedButton.icon(
-                        onPressed: correctCutout,
-                        icon: const Icon(Icons.brush),
-                        label: const Text('Corregir con pincel'),
-                      ),
-                      OutlinedButton(
-                        onPressed: () => removeBackground(false),
-                        child: const Text('Quitar fondo · prenda sola'),
-                      ),
-                      OutlinedButton(
-                        onPressed: () => removeBackground(true),
-                        child: const Text('Aislar ropa · puesta'),
-                      ),
-                    ],
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.only(top: 8),
-                    child: Text(
-                      'Si hay varias prendas, recorta la que quieras guardar.',
-                    ),
-                  ),
-                ],
-                  ],
-                ),
                 const SizedBox(height: 8),
                 ExpansionTile(
                   key: const PageStorageKey('colores-temporadas'),
