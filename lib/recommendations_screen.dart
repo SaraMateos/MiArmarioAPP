@@ -635,15 +635,60 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
-                  const Text(
-                    'Tu armario, nuevas combinaciones',
-                    style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(22),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: .48),
+                      borderRadius: BorderRadius.circular(28),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.surface.withValues(alpha: .8),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Icon(
+                            Icons.auto_awesome_rounded,
+                            size: 28,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                        const SizedBox(height: 18),
+                        Text(
+                          'Tu estilo, tu próxima idea',
+                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            height: 1.12,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Combinaciones hechas con tu armario. Descubre una propuesta, ajústala a tu gusto y guarda la que te encaje.',
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.4),
+                        ),
+                        const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            Icon(Icons.checkroom_outlined, size: 18, color: Theme.of(context).colorScheme.primary),
+                            const SizedBox(width: 7),
+                            Expanded(
+                              child: Text(
+                                'Colores · clima · ocasión · uso reciente',
+                                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Las propuestas tienen en cuenta colores, abrigo, temporada y usos registrados. Revisa cada outfit antes de guardarlo.',
-                  ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                   OutlinedButton.icon(
                     onPressed: () async {
                       final chosen = await showDatePicker(
@@ -810,10 +855,17 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                   const SizedBox(height: 20),
                   for (final s in suggestions)
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 24),
+                      padding: const EdgeInsets.only(bottom: 20),
                       child: Card(
+                        clipBehavior: Clip.antiAlias,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(28),
+                          side: BorderSide(
+                            color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: .65),
+                          ),
+                        ),
                         child: Padding(
-                          padding: const EdgeInsets.all(12),
+                          padding: const EdgeInsets.all(16),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
