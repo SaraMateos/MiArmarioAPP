@@ -387,7 +387,7 @@ class _OutfitEditorState extends State<OutfitEditor> {
                   ),
                 ),
               ],
-              if (!mannequinView && items.isNotEmpty) ...[
+              if (items.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 Text('Prendas', style: Theme.of(context).textTheme.titleSmall),
                 const SizedBox(height: 8),
@@ -446,6 +446,73 @@ class _OutfitEditorState extends State<OutfitEditor> {
                         ),
                       );
                     },
+                  ),
+                ),
+              ],
+              if (mannequinView && selected != null && selected! < visibleItems.length) ...[
+                const SizedBox(height: 10),
+                Card(
+                  margin: EdgeInsets.zero,
+                  elevation: 0,
+                  color: Theme.of(context).colorScheme.surfaceContainerLow,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.tune, size: 20),
+                            const SizedBox(width: 8),
+                            const Expanded(child: Text('Ajustar prenda')),
+                            IconButton(
+                              tooltip: 'Eliminar prenda',
+                              visualDensity: VisualDensity.compact,
+                              onPressed: () => setState(() {
+                                final id = visibleItems[selected!].garmentId;
+                                items.removeWhere((item) => item.garmentId == id);
+                                mannequinItems.removeWhere((item) => item.garmentId == id);
+                                selected = null;
+                              }),
+                              icon: const Icon(Icons.delete_outline, color: Colors.red),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            const Icon(Icons.open_with, size: 18),
+                            const SizedBox(width: 6),
+                            const Text('Tamaño'),
+                            Expanded(
+                              child: Slider(
+                                min: .5,
+                                max: 1.6,
+                                value: visibleItems[selected!].scale.clamp(.5, 1.6),
+                                onChanged: (v) => setState(() => visibleItems[selected!].scale = v),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: TextButton.icon(
+                            onPressed: () => setState(() {
+                              visibleItems[selected!].x = .5;
+                              final garment = widget.garments
+                                  .where((g) => g.id == visibleItems[selected!].garmentId)
+                                  .firstOrNull;
+                              if (garment != null) {
+                                final pos = _defaultPosition(garment, selected!);
+                                visibleItems[selected!].y = pos.$2;
+                              } else {
+                                visibleItems[selected!].y = .5;
+                              }
+                            }),
+                            icon: const Icon(Icons.center_focus_strong, size: 18),
+                            label: const Text('Centrar prenda'),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
