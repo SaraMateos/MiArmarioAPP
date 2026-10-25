@@ -108,9 +108,14 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.textContaining('Falta una parte inferior'), findsOneWidget);
-      await tester.ensureVisible(
+      // El botón está por encima del diagnóstico; vuelve a él con el scroll
+      // antes de interactuar, en lugar de pedir ensureVisible a un hijo no montado.
+      await tester.scrollUntilVisible(
         find.text('Elegir prendas y planificar manualmente'),
+        -150,
+        scrollable: find.byType(Scrollable).first,
       );
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Elegir prendas y planificar manualmente'));
       await waitForWidget(tester, find.text('Añadir prenda'));
       await waitForWidget(tester, find.text('Añadir prenda'));
