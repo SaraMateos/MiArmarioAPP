@@ -165,12 +165,13 @@ void main() {
     await tester.drag(draggableGarment, const Offset(80, 45));
     await tester.pumpAndSettle();
     expect(find.byType(Slider), findsOneWidget);
+    // El nombre del outfit es un TextField; el TextFormField del editor
+    // corresponde a las notas y no debe modificarse en esta comprobación.
     final text = find.descendant(
       of: outfitEditor,
-      matching: find.byType(TextFormField),
+      matching: find.byType(TextField),
     ).first;
-    // El primer TextFormField del editor es el nombre; no existe un texto
-    // independiente «Nombre del outfit» que pueda usarse como destino.
+    await tester.ensureVisible(text);
     await tester.enterText(text, 'Outfit editado');
     await tester.scrollUntilVisible(
       find.text('Guardar outfit'),
