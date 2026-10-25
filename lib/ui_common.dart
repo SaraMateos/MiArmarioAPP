@@ -141,7 +141,7 @@ class OutfitBoard extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) => AspectRatio(
-    aspectRatio: showFigure ? 1.0 : .85,
+    aspectRatio: showFigure ? .82 : .85,
     child: LayoutBuilder(
       builder: (context, box) {
         return ClipRRect(
@@ -267,7 +267,7 @@ class OutfitBoard extends StatelessWidget {
               color: selected == i
                   ? Theme.of(context).colorScheme.primary
                   : Colors.transparent,
-              width: 0,
+              width: selected == i ? 2 : 0,
             ),
           ),
           child: ClipRRect(
