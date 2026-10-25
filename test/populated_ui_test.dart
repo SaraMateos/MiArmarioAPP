@@ -8,6 +8,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mi_armario/home.dart';
 import 'package:mi_armario/models.dart';
+import 'package:mi_armario/outfit_editor.dart';
 import 'package:mi_armario/repository.dart';
 import 'package:mi_armario/ui_common.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -147,35 +148,43 @@ void main() {
     await tester.tap(find.text('Un día tranquilo'));
     await tester.pumpAndSettle();
     await capture('editor');
-    // La pantalla de lista también puede contener OutfitBoard en una
-    // tarjeta; el último es el lienzo del editor que está en primer plano.
-    final outfitBoard = find.byType(OutfitBoard).last;
+    // Limita las búsquedas al editor abierto: la pantalla anterior puede
+    // conservar tarjetas y desplazables fuera de escena durante la transición.
+    final outfitEditor = find.byType(OutfitEditor);
+    final outfitBoard = find.descendant(
+      of: outfitEditor,
+      matching: find.byType(OutfitBoard),
+    );
     final draggableGarment = find.descendant(
       of: outfitBoard,
       matching: find.byType(GestureDetector),
-    ).first;
+    ).last;
     await tester.ensureVisible(draggableGarment);
     await tester.pumpAndSettle();
     await tester.tap(draggableGarment);
     await tester.drag(draggableGarment, const Offset(80, 45));
     await tester.pumpAndSettle();
     expect(find.byType(Slider), findsOneWidget);
-    final text = find.byType(TextFormField).first;
+    final text = find.descendant(
+      of: outfitEditor,
+      matching: find.byType(TextFormField),
+    ).first;
     await tester.scrollUntilVisible(
       find.text('Nombre del outfit'),
       150,
-      scrollable: find.byType(Scrollable).first,
+      scrollable: find.descendant(
+        of: outfitEditor,
+        matching: find.byType(Scrollable),
+      ).first,
     );
     await tester.enterText(text, 'Outfit editado');
     await tester.scrollUntilVisible(
       find.text('Guardar outfit'),
       250,
-      scrollable: find
-          .descendant(
-            of: find.byType(ListView).last,
-            matching: find.byType(Scrollable),
-          )
-          .first,
+      scrollable: find.descendant(
+        of: outfitEditor,
+        matching: find.byType(Scrollable),
+      ).first,
     );
     await tester.pumpAndSettle();
     await tester.tap(find.text('Guardar outfit'));
