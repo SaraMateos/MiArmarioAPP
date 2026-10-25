@@ -149,6 +149,7 @@ void main() {
       ],
       profile: accessoryProfile,
       climate: Climate.mild,
+      required: {'bag'},
     );
     expect(accessorySuggestions, isNotEmpty);
     expect(
