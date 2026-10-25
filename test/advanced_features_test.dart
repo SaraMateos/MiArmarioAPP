@@ -90,6 +90,32 @@ void main() {
       true,
     );
   });
+  test('Ideas prioriza propuestas automáticas con prendas diferentes', () {
+    final pieces = [
+      g('t1', 'Camiseta'),
+      g('t2', 'Camisa'),
+      g('t3', 'Jersey'),
+      g('b1', 'Pantalón'),
+      g('b2', 'Vaqueros'),
+      g('s1', 'Botas'),
+      g('s2', 'Zapatillas'),
+    ];
+    final ideas = suggest(pieces, climate: Climate.hot);
+    expect(ideas.length, greaterThanOrEqualTo(3));
+    for (var i = 0; i < 3; i++) {
+      for (var j = i + 1; j < 3; j++) {
+        final a = ideas[i].garments.map((piece) => piece.id).toSet();
+        final b = ideas[j].garments.map((piece) => piece.id).toSet();
+        final union = a.union(b).length;
+        final similarity = a.intersection(b).length / union;
+        expect(
+          similarity,
+          lessThanOrEqualTo(.65),
+          reason: 'Las primeras ideas deben ofrecer alternativas diferenciadas.',
+        );
+      }
+    }
+  });
   test('Exclusión caduca por día sin modificar disponibilidad; archivo excluye siempre', () {
     final top = g('t', 'Camiseta'),
         other = g('o', 'Camisa'),
