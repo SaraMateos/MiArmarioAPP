@@ -7,7 +7,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mi_armario/home.dart';
-import 'package:mi_armario/auto_framed_photo.dart';
 import 'package:mi_armario/models.dart';
 import 'package:mi_armario/repository.dart';
 import 'package:mi_armario/ui_common.dart';
@@ -80,10 +79,6 @@ void main() {
         ),
       );
     });
-    addTearDown(() async {
-      await repo.close();
-      await root.delete(recursive: true);
-    });
     tester.view.physicalSize = const Size(412, 892);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -152,8 +147,13 @@ void main() {
     await tester.tap(find.text('Un día tranquilo'));
     await tester.pumpAndSettle();
     await capture('editor');
-    await tester.tap(find.byType(AutoFramedPhoto).first);
-    await tester.drag(find.byType(Photo).first, const Offset(80, 45));
+    final outfitBoard = find.byType(OutfitBoard);
+    final draggableGarment = find.descendant(
+      of: outfitBoard,
+      matching: find.byType(GestureDetector),
+    ).first;
+    await tester.tap(draggableGarment);
+    await tester.drag(draggableGarment, const Offset(80, 45));
     await tester.pumpAndSettle();
     expect(find.byType(Slider), findsOneWidget);
     final text = find.byType(TextFormField).first;
