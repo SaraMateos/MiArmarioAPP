@@ -83,7 +83,7 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      await seeAndTap('Colores, temporadas y más datos');
+      await seeAndTap('Colores, temporadas y ocasiones');
       await seeAndTap('Rojo');
       await seeAndTap('Primavera');
       await seeAndTap('Otoño');
