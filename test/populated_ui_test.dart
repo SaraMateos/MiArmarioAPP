@@ -169,14 +169,8 @@ void main() {
       of: outfitEditor,
       matching: find.byType(TextFormField),
     ).first;
-    await tester.scrollUntilVisible(
-      find.text('Nombre del outfit'),
-      150,
-      scrollable: find.descendant(
-        of: outfitEditor,
-        matching: find.byType(Scrollable),
-      ).first,
-    );
+    // El primer TextFormField del editor es el nombre; no existe un texto
+    // independiente «Nombre del outfit» que pueda usarse como destino.
     await tester.enterText(text, 'Outfit editado');
     await tester.scrollUntilVisible(
       find.text('Guardar outfit'),
