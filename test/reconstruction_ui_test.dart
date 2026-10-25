@@ -329,7 +329,7 @@ void main() {
       );
       await t.binding.handlePopRoute();
       await t.pumpAndSettle();
-      final section = find.text('Colores, temporadas y más datos');
+      final section = find.text('Colores, temporadas y ocasiones');
       await t.scrollUntilVisible(
         section,
         150,
