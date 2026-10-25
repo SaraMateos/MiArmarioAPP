@@ -232,7 +232,21 @@ class _OutfitEditorState extends State<OutfitEditor> {
                 selected: {mannequinView},
                 onSelectionChanged: (values) => switchView(values.first),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: OutlinedButton.icon(
+                  onPressed: add,
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Añadir prenda'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    visualDensity: VisualDensity.compact,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
               OutfitBoard(
                 repo: widget.repo,
                 garments: widget.garments,
@@ -316,34 +330,71 @@ class _OutfitEditorState extends State<OutfitEditor> {
               if (!mannequinView && items.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 Text('Prendas', style: Theme.of(context).textTheme.titleSmall),
-                const SizedBox(height: 6),
-                SizedBox(height: 48, child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: items.length,
-                  separatorBuilder: (_, _) => const SizedBox(width: 8),
-                  itemBuilder: (context, i) {
-                    final garment = widget.garments.where((g) => g.id == items[i].garmentId).firstOrNull;
-                    return ChoiceChip(
-                      label: Text(garment?.name ?? 'Prenda ${i + 1}', overflow: TextOverflow.ellipsis),
-                      selected: selected == i,
-                      onSelected: (_) => setState(() => selected = i),
-                      avatar: Icon(selected == i ? Icons.check_circle : Icons.checkroom, size: 18),
-                    );
-                  },
-                )),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 104,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: items.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 8),
+                    itemBuilder: (context, i) {
+                      final garment = widget.garments.where((g) => g.id == items[i].garmentId).firstOrNull;
+                      final isSelected = selected == i;
+                      return Semantics(
+                        button: true,
+                        selected: isSelected,
+                        label: garment?.name ?? 'Prenda ${i + 1}',
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () => setState(() => selected = i),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 160),
+                            width: 84,
+                            padding: const EdgeInsets.all(5),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? Theme.of(context).colorScheme.secondaryContainer
+                                  : Theme.of(context).colorScheme.surface,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isSelected
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context).colorScheme.outlineVariant,
+                                width: isSelected ? 2 : 1,
+                              ),
+                            ),
+                            child: Column(
+                              children: [
+                                Expanded(
+                                  child: garment == null
+                                      ? const Icon(Icons.checkroom, size: 32)
+                                      : AutoFramedPhoto(
+                                          widget.repo.photoPath(garment.photo),
+                                          padding: .04,
+                                        ),
+                                ),
+                                const SizedBox(height: 3),
+                                Text(
+                                  garment?.name ?? 'Prenda ${i + 1}',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.labelSmall,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ],
-              const SizedBox(height: 12),
               if (mannequinView) OutlinedButton.icon(
                 onPressed: items.isEmpty ? null : arrangeOnFigure,
                 icon: const Icon(Icons.accessibility_new),
                 label: const Text('Recolocar sobre el maniquí'),
               ),
               const SizedBox(height: 8),
-              OutlinedButton.icon(
-                onPressed: add,
-                icon: const Icon(Icons.add),
-                label: const Text('Añadir prenda'),
-              ),
               const SizedBox(height: 16),
               const Text('Foto del outfit puesto (opcional)'),
               if (pendingReference != null ||
