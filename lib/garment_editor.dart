@@ -745,7 +745,7 @@ class _GarmentEditorState extends State<GarmentEditor> {
                     const SizedBox(height: 16),
                     MultiChoice(
                       label: 'Colores',
-                      values: colors,
+                      values: [...colors]..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase())),
                       selected: colorTags,
                       onChanged: (v) => setState(() => colorTags = v),
                     ),
