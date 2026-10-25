@@ -190,12 +190,21 @@ class RecommendationService {
                       ], occasion),
                 )
                 .toList();
-            final accessory = accessories.any((g) => required.contains(g.id))
-                ? accessories.firstWhere((g) => required.contains(g.id))
-                : accessoryCandidates.isEmpty
-                ? null
-                : accessoryCandidates.first;
-            final set = [...base, ?middle, ?coat, ?shoe, ?accessory];
+            final requiredAccessories = accessories
+                .where((g) => required.contains(g.id))
+                .toList();
+            final optionalAccessory = requiredAccessories.isEmpty &&
+                    accessoryCandidates.isNotEmpty
+                ? accessoryCandidates.first
+                : null;
+            final set = [
+              ...base,
+              ?middle,
+              ?coat,
+              ?shoe,
+              ...requiredAccessories,
+              ?optionalAccessory,
+            ];
             if ((profile?.linkedSets ?? <List<String>>[]).any(
               (group) =>
                   group.any((id) => set.any((g) => g.id == id)) &&
