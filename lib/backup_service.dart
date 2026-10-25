@@ -22,7 +22,7 @@ class BackupService {
       );
     }
     final manifest = utf8.encode(
-      jsonEncode({'format': 'mi_armario', 'version': 5, 'data': data}),
+      jsonEncode({'format': 'mi_armario', 'version': 6, 'data': data}),
     );
     if (manifest.length > 8 * 1024 * 1024) {
       throw const FormatException(
@@ -164,7 +164,7 @@ class BackupService {
         throw const FormatException('Los datos de la copia no son válidos.');
     if (decoded is! Map ||
         decoded['format'] != 'mi_armario' ||
-        ![1, 2, 3, 4, 5].contains(decoded['version']) ||
+        ![1, 2, 3, 4, 5, 6].contains(decoded['version']) ||
         decoded['data'] is! Map) {
       invalid();
     }
@@ -203,6 +203,9 @@ class BackupService {
         'x',
         'y',
         'scale',
+        if (version >= 6) 'mannequin_x',
+        if (version >= 6) 'mannequin_y',
+        if (version >= 6) 'mannequin_scale',
       ],
       'plans': ['date', 'outfit_id', 'worn'],
       'garment_wears': ['date', 'garment_id'],
@@ -230,6 +233,11 @@ class BackupService {
           invalid();
         }
         final m = Map<String, Object?>.from(row);
+        if (table == 'outfit_items' && version < 6) {
+          m['mannequin_x'] = .3;
+          m['mannequin_y'] = .2;
+          m['mannequin_scale'] = 1.0;
+        }
         for (final key in columns[table]!) {
           final v = m[key];
           if (['favorite', 'worn'].contains(key)) {
@@ -238,10 +246,10 @@ class BackupService {
             if (v is! int || v < 1 || v > 3) invalid();
           } else if (key == 'position') {
             if (v is! int || v < 0 || v > 30) invalid();
-          } else if (['x', 'y', 'scale'].contains(key)) {
+          } else if (['x', 'y', 'scale', 'mannequin_x', 'mannequin_y', 'mannequin_scale'].contains(key)) {
             if (v is! num ||
                 !v.isFinite ||
-                (key == 'scale' ? v < .5 || v > 1.8 : v < 0 || v > 1)) {
+                (key == 'scale' || key == 'mannequin_scale' ? v < .5 || v > 1.8 : v < 0 || v > 1)) {
               invalid();
             }
           } else {
