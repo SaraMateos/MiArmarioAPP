@@ -97,46 +97,102 @@ class _OutfitEditorState extends State<OutfitEditor> {
           y: _defaultPosition(garment, items.length - 1).$2,
         ));
         _sortLayers();
-        _positionOnMannequin(mannequinItems);
+        // Solo se recoloca la prenda recién añadida; no se alteran ajustes
+        // manuales que el usuario ya haya hecho en el resto del outfit.
+        final newMannequinItem = mannequinItems.firstWhere(
+          (item) => item.garmentId == garment.id,
+        );
+        final mannequinPosition = _defaultPosition(garment, mannequinItems.length - 1);
+        newMannequinItem
+          ..x = mannequinPosition.$1
+          ..y = mannequinPosition.$2
+          ..scale = _defaultScale(garment);
         selected = items.indexWhere((i) => i.garmentId == garment.id);
       });
     }
   }
 
+  String _garmentKind(Garment garment) =>
+      '${garment.category} ${garment.subtype}'.toLowerCase();
+
   (double, double) _defaultPosition(Garment garment, int index) {
-    final kind = '${garment.category} ${garment.subtype}'.toLowerCase();
-    if (kind.contains('abrigo') || kind.contains('chaqueta')) return (.5, .14);
-    if (kind.contains('superior') || kind.contains('camisa') || kind.contains('jersey')) return (.5, .18);
-    if (kind.contains('inferior') || kind.contains('pantal') || kind.contains('falda')) return (.5, .59);
-    if (kind.contains('calzado') || kind.contains('zapato')) return (.5, .95);
-    if (kind.contains('vestido') || kind.contains('mono')) return (.5, .36);
+    final kind = _garmentKind(garment);
+    // Posiciones normalizadas en el lienzo: las prendas interiores quedan
+    // detrás de las capas exteriores y cada familia ocupa su zona natural.
+    if (kind.contains('vestido') || kind.contains('mono') || kind.contains('vestidos')) {
+      return (.5, .43);
+    }
+    if (kind.contains('calzado') || kind.contains('zapato') ||
+        kind.contains('bota') || kind.contains('sandalia')) {
+      return (.5, .87);
+    }
+    if (kind.contains('inferior') || kind.contains('pantal') ||
+        kind.contains('falda') || kind.contains('short')) {
+      return (.5, .65);
+    }
+    if (kind.contains('abrigo') || kind.contains('chaqueta') ||
+        kind.contains('americana') || kind.contains('chaleco')) {
+      return (.5, .24);
+    }
+    if (kind.contains('superior') || kind.contains('camisa') ||
+        kind.contains('camiseta') || kind.contains('jersey') ||
+        kind.contains('sudadera') || kind.contains('blusa') ||
+        kind.contains('polo')) {
+      return (.5, .27);
+    }
+    if (kind.contains('accesorio') || kind.contains('bolso') ||
+        kind.contains('bufanda') || kind.contains('gorro')) {
+      return (.72, .35);
+    }
     return (.5, .43);
   }
 
+  double _defaultScale(Garment garment) {
+    final kind = _garmentKind(garment);
+    if (kind.contains('calzado') || kind.contains('zapato') ||
+        kind.contains('bota') || kind.contains('sandalia')) return .62;
+    if (kind.contains('accesorio') || kind.contains('bolso') ||
+        kind.contains('bufanda') || kind.contains('gorro')) return .72;
+    if (kind.contains('inferior') || kind.contains('pantal') ||
+        kind.contains('falda') || kind.contains('short')) return .94;
+    if (kind.contains('vestido') || kind.contains('mono')) return 1.02;
+    if (kind.contains('abrigo') || kind.contains('chaqueta') ||
+        kind.contains('americana') || kind.contains('chaleco')) return 1.02;
+    return .92;
+  }
+
   int _layerPriority(Garment g) {
-    final kind = '${g.category} ${g.subtype}'.toLowerCase();
-    if (kind.contains('camiseta') || kind.contains('camisa')) return 0;
-    if (kind.contains('jersey') || kind.contains('sudadera')) return 1;
-    if (kind.contains('chaqueta') || kind.contains('abrigo')) return 3;
+    final kind = _garmentKind(g);
+    if (kind.contains('calzado') || kind.contains('zapato') ||
+        kind.contains('bota') || kind.contains('sandalia')) return 0;
+    if (kind.contains('inferior') || kind.contains('pantal') ||
+        kind.contains('falda') || kind.contains('short')) return 1;
+    if (kind.contains('vestido') || kind.contains('mono')) return 2;
+    if (kind.contains('camiseta') || kind.contains('camisa') ||
+        kind.contains('blusa') || kind.contains('polo')) return 3;
+    if (kind.contains('jersey') || kind.contains('sudadera')) return 4;
+    if (kind.contains('chaqueta') || kind.contains('abrigo') ||
+        kind.contains('americana') || kind.contains('chaleco')) return 5;
     return 2;
   }
 
   void _sortLayers() {
     final byId = {for (final g in widget.garments) g.id: g};
     int compare(OutfitItem a, OutfitItem b) =>
-        _layerPriority(byId[a.garmentId]!).compareTo(_layerPriority(byId[b.garmentId]!));
+        _layerPriority(byId[a.garmentId] ?? widget.garments.first)
+            .compareTo(_layerPriority(byId[b.garmentId] ?? widget.garments.first));
     items.sort(compare);
     mannequinItems.sort(compare);
   }
 
   void _positionOnMannequin(List<OutfitItem> target) {
-    for (var i = 0; i < target.length; i++) {
-      final matches = widget.garments.where((g) => g.id == target[i].garmentId);
-      if (matches.isEmpty) continue;
-      final pos = _defaultPosition(matches.first, i);
-      target[i].x = pos.$1;
-      target[i].y = pos.$2;
-      target[i].scale = 1.1;
+    for (final item in target) {
+      final garment = widget.garments.where((g) => g.id == item.garmentId).firstOrNull;
+      if (garment == null) continue;
+      final pos = _defaultPosition(garment, target.indexOf(item));
+      item.x = pos.$1;
+      item.y = pos.$2;
+      item.scale = _defaultScale(garment);
     }
   }
 
@@ -400,7 +456,6 @@ class _OutfitEditorState extends State<OutfitEditor> {
               ),
               const SizedBox(height: 8),
               const SizedBox(height: 16),
-              const Text('Foto del outfit puesto (opcional)'),
               if (pendingReference != null ||
                   (!removeReference && referencePhoto.isNotEmpty))
                 SizedBox(
