@@ -171,7 +171,11 @@ class _OutfitEditorState extends State<OutfitEditor> {
       await widget.repo.saveOutfit(
         Outfit(
           id: widget.outfit?.id ?? const Uuid().v4(),
-          name: name.text.trim(),
+          name: name.text.trim().isEmpty
+              ? (widget.outfit?.name.isNotEmpty == true
+                  ? widget.outfit!.name
+                  : 'Look ${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}')
+              : name.text.trim(),
           occasionTags: occasionTags,
           items: [
             for (var i = 0; i < items.length; i++)
@@ -453,7 +457,9 @@ class _OutfitEditorState extends State<OutfitEditor> {
                             Outfit(
                               id: widget.outfit?.id ?? 'export',
                               name: name.text.trim().isEmpty
-                                  ? 'Mi outfit'
+                                  ? (widget.outfit?.name.isNotEmpty == true
+                                      ? widget.outfit!.name
+                                      : 'Mi outfit')
                                   : name.text.trim(),
                               items: visibleItems,
                               occasionTags: occasionTags,
@@ -462,14 +468,6 @@ class _OutfitEditorState extends State<OutfitEditor> {
                           ),
                   ),
                 ],
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: name,
-                maxLength: 100,
-                decoration: const InputDecoration(
-                  labelText: 'Nombre del outfit',
-                ),
               ),
               const SizedBox(height: 12),
               MultiChoice(
