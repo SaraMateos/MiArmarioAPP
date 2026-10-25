@@ -16,5 +16,13 @@ Future<void> waitForWidget(WidgetTester tester, Finder finder) async {
       return;
     }
   }
-  throw TestFailure('La interfaz no ha llegado al estado esperado.');
+  throw TestFailure(
+    'La interfaz no ha llegado al estado esperado. '
+    'Elemento buscado: $finder. '
+    'Coincidencias: ${finder.evaluate().length}. '
+    'Indicadores circulares: '
+    '${find.byType(CircularProgressIndicator).evaluate().length}. '
+    'Indicadores lineales: '
+    '${find.byType(LinearProgressIndicator).evaluate().length}.',
+  );
 }
