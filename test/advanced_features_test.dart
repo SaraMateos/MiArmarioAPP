@@ -448,6 +448,38 @@ void main() {
       await root.delete(recursive: true);
     }
   });
+  test('Deshacer al desmarcar un outfit restaura el historial de uso', () async {
+    final (root, repo) = await open();
+    try {
+      await add(repo, 'history-top', 'Camiseta');
+      await add(repo, 'history-bottom', 'Pantalón');
+      await repo.saveOutfit(
+        Outfit(
+          id: 'history-outfit',
+          name: 'Historial',
+          items: [
+            OutfitItem(garmentId: 'history-top'),
+            OutfitItem(garmentId: 'history-bottom'),
+          ],
+        ),
+      );
+      final key = dateKey(DateTime.now().subtract(const Duration(days: 2)));
+      await repo.savePlan(DayPlan(key, 'history-outfit', true));
+      expect((await repo.usageStats())['history-top']?.count, 1);
+      expect((await repo.usageStats(until: DateTime.parse(key)))['history-top']?.count, 1);
+
+      await repo.savePlan(DayPlan(key, 'history-outfit', false));
+      expect((await repo.usageStats())['history-top'], isNull);
+
+      await repo.undoLast();
+      final restored = (await repo.usageStats())['history-top'];
+      expect(restored?.count, 1);
+      expect(restored?.lastWorn, DateTime.parse(key));
+    } finally {
+      await repo.close();
+      await root.delete(recursive: true);
+    }
+  });
   testWidgets(
     'Exporta PNG real con todas las prendas y no pierde las fotos originales',
     (tester) async {
