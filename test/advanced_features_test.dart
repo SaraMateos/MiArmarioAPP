@@ -41,9 +41,10 @@ void main() {
     bool wind = false,
     List<Map<String, dynamic>> feedback = const [],
     Set<String> required = const {},
+    Map<String, WearStat> usage = const {},
   }) => RecommendationService.suggest(
     garments: pieces,
-    usage: {},
+    usage: usage,
     date: date,
     climate: climate,
     profile: profile,
@@ -116,6 +117,28 @@ void main() {
       }
     }
   });
+  test('Ideas favorece prendas poco usadas sin ignorar el contexto', () {
+    final pieces = [
+      g('top-frequent', 'Camiseta'),
+      g('top-neglected', 'Camisa'),
+      g('bottom', 'Pantalón'),
+    ];
+    final ideas = suggest(
+      pieces,
+      climate: Climate.hot,
+      usage: {
+        'top-frequent': WearStat(count: 12, lastWorn: date),
+        'top-neglected': const WearStat(),
+      },
+    );
+    expect(ideas, isNotEmpty);
+    expect(
+      ideas.first.garments.any((piece) => piece.id == 'top-neglected'),
+      isTrue,
+      reason: 'Una prenda sin usos registrados debe recibir prioridad de rotación si encaja.',
+    );
+  });
+
   test('Exclusión caduca por día sin modificar disponibilidad; archivo excluye siempre', () {
     final top = g('t', 'Camiseta'),
         other = g('o', 'Camisa'),
