@@ -41,6 +41,14 @@ void main() {
       }
       root = await Directory.systemTemp.createTemp('wardrobe_populated_');
       repo = await WardrobeRepository.open(root);
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox());
+        await tester.pumpAndSettle();
+        PaintingBinding.instance.imageCache.clear();
+        PaintingBinding.instance.imageCache.clearLiveImages();
+        await repo.close();
+        await root.delete(recursive: true);
+      });
       for (final entry in [
         ('g1', 'Camiseta blanca', 'camiseta', 'Parte superior', 'Blanco'),
         ('g2', 'Vaqueros azules', 'pantalon', 'Parte inferior', 'Azul'),
