@@ -58,7 +58,7 @@ void main() {
       await repo.db.setVersion(2);
       await repo.close();
       repo = await WardrobeRepository.open(root);
-      expect(await repo.db.getVersion(), 5);
+      expect(await repo.db.getVersion(), 6);
       final g = (await repo.garments()).single;
       expect(g.id, 'old');
       expect(g.status, 'Disponible');
