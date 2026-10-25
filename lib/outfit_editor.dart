@@ -230,7 +230,6 @@ class _OutfitEditorState extends State<OutfitEditor> {
                 style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
-              const SizedBox(height: 8),
               Align(
                 alignment: Alignment.centerRight,
                 child: OutlinedButton.icon(
@@ -301,12 +300,10 @@ class _OutfitEditorState extends State<OutfitEditor> {
                           TextButton.icon(
                             onPressed: () => setState(() {
                               final garmentId = items[selected!].garmentId;
-                              for (final list in [items]) {
-                                final index = list.indexWhere((item) => item.garmentId == garmentId);
-                                if (index >= 0) {
-                                  final item = list.removeAt(index);
-                                  list.add(item);
-                                }
+                              final index = items.indexWhere((item) => item.garmentId == garmentId);
+                              if (index >= 0) {
+                                final item = items.removeAt(index);
+                                items.add(item);
                               }
                               selected = items.indexWhere((item) => item.garmentId == garmentId);
                             }),
@@ -316,12 +313,10 @@ class _OutfitEditorState extends State<OutfitEditor> {
                           TextButton.icon(
                             onPressed: () => setState(() {
                               final garmentId = items[selected!].garmentId;
-                              for (final list in [items]) {
-                                final index = list.indexWhere((item) => item.garmentId == garmentId);
-                                if (index >= 0) {
-                                  final item = list.removeAt(index);
-                                  list.insert(0, item);
-                                }
+                              final index = items.indexWhere((item) => item.garmentId == garmentId);
+                              if (index >= 0) {
+                                final item = items.removeAt(index);
+                                items.insert(0, item);
                               }
                               selected = items.indexWhere((item) => item.garmentId == garmentId);
                             }),
