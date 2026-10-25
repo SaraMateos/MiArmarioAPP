@@ -74,7 +74,7 @@ void main() {
           ),
           ['Azul'],
         );
-        expect(await repo.db.getVersion(), 5);
+        expect(await repo.db.getVersion(), 6);
       } finally {
         await repo.close();
         await root.delete(recursive: true);
