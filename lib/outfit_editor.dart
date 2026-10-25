@@ -341,8 +341,9 @@ class _OutfitEditorState extends State<OutfitEditor> {
                           tooltip: 'Eliminar prenda',
                           visualDensity: VisualDensity.compact,
                           onPressed: () => setState(() {
-                            items.removeAt(selected!);
-                            mannequinItems.removeAt(selected!);
+                            final garmentId = visibleItems[selected!].garmentId;
+                            items.removeWhere((item) => item.garmentId == garmentId);
+                            mannequinItems.removeWhere((item) => item.garmentId == garmentId);
                             selected = null;
                           }),
                           icon: const Icon(Icons.delete_outline, color: Colors.red),
@@ -362,21 +363,30 @@ class _OutfitEditorState extends State<OutfitEditor> {
                           ),
                           TextButton.icon(
                             onPressed: () => setState(() {
-                              final i = selected!;
-                              final free = items.removeAt(i);
-                              final figure = mannequinItems.removeAt(i);
-                              items.add(free);
-                              mannequinItems.add(figure);
-                              selected = items.length - 1;
+                              final garmentId = visibleItems[selected!].garmentId;
+                              for (final list in [items, mannequinItems]) {
+                                final index = list.indexWhere((item) => item.garmentId == garmentId);
+                                if (index >= 0) {
+                                  final item = list.removeAt(index);
+                                  list.add(item);
+                                }
+                              }
+                              selected = visibleItems.indexWhere((item) => item.garmentId == garmentId);
                             }),
                             icon: const Icon(Icons.flip_to_front, size: 18),
                             label: const Text('Al frente'),
                           ),
                           TextButton.icon(
                             onPressed: () => setState(() {
-                              final item = visibleItems.removeAt(selected!);
-                              visibleItems.insert(0, item);
-                              selected = 0;
+                              final garmentId = visibleItems[selected!].garmentId;
+                              for (final list in [items, mannequinItems]) {
+                                final index = list.indexWhere((item) => item.garmentId == garmentId);
+                                if (index >= 0) {
+                                  final item = list.removeAt(index);
+                                  list.insert(0, item);
+                                }
+                              }
+                              selected = visibleItems.indexWhere((item) => item.garmentId == garmentId);
                             }),
                             icon: const Icon(Icons.vertical_align_bottom, size: 18),
                             label: const Text('Al fondo'),
