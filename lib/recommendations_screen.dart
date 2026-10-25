@@ -688,7 +688,15 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
+                  FilledButton.icon(
+                    onPressed: manualPlan,
+                    icon: const Icon(Icons.add),
+                    label: const Text(
+                      'Elegir prendas y planificar manualmente',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   OutlinedButton.icon(
                     onPressed: () async {
                       final chosen = await showDatePicker(
@@ -803,13 +811,6 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                     onPressed: reviewGarments,
                     icon: const Icon(Icons.checkroom),
                     label: const Text('Revisar categorías y disponibilidad'),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: manualPlan,
-                    icon: const Icon(Icons.add),
-                    label: const Text(
-                      'Elegir prendas y planificar manualmente',
-                    ),
                   ),
                   const SizedBox(height: 16),
                   Wrap(
