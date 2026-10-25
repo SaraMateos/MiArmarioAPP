@@ -147,11 +147,15 @@ void main() {
     await tester.tap(find.text('Un día tranquilo'));
     await tester.pumpAndSettle();
     await capture('editor');
-    final outfitBoard = find.byType(OutfitBoard);
+    // La pantalla de lista también puede contener OutfitBoard en una
+    // tarjeta; el último es el lienzo del editor que está en primer plano.
+    final outfitBoard = find.byType(OutfitBoard).last;
     final draggableGarment = find.descendant(
       of: outfitBoard,
       matching: find.byType(GestureDetector),
     ).first;
+    await tester.ensureVisible(draggableGarment);
+    await tester.pumpAndSettle();
     await tester.tap(draggableGarment);
     await tester.drag(draggableGarment, const Offset(80, 45));
     await tester.pumpAndSettle();
