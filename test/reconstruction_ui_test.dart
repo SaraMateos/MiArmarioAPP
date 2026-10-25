@@ -78,6 +78,12 @@ void main() {
       stream.removeListener(listener);
     });
     addTearDown(() async {
+      // Desmontar widgets y liberar imágenes antes de borrar fotos temporales
+      // (Windows mantiene bloqueados algunos archivos mientras siguen en uso).
+      await t.pumpWidget(const SizedBox());
+      await t.pumpAndSettle();
+      PaintingBinding.instance.imageCache.clear();
+      PaintingBinding.instance.imageCache.clearLiveImages();
       await repo.close();
       await root.delete(recursive: true);
     });
@@ -330,14 +336,17 @@ void main() {
       );
       await t.binding.handlePopRoute();
       await t.pumpAndSettle();
-      final section = find.text('Colores, temporadas y ocasiones');
+      final section = find.byKey(
+        const PageStorageKey('colores-temporadas'),
+      );
       await t.scrollUntilVisible(
-        section,
+        find.text('Colores, temporadas y ocasiones'),
         150,
         scrollable: find.byType(Scrollable).first,
       );
       await t.tap(section);
       await t.pumpAndSettle();
+      expect(find.text('Colores'), findsOneWidget);
       final red = find.widgetWithText(FilterChip, 'Rojo');
       await t.scrollUntilVisible(
         red,
