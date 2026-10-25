@@ -86,13 +86,20 @@ void main() {
       PaintingBinding.instance.imageCache.clear();
       PaintingBinding.instance.imageCache.clearLiveImages();
       await repo.close();
-      for (var attempt = 0; attempt < 4; attempt++) {
+      for (var attempt = 0; attempt < 12; attempt++) {
         try {
           if (await root.exists()) await root.delete(recursive: true);
           break;
         } on FileSystemException {
-          if (attempt == 3) rethrow;
-          await Future<void>.delayed(const Duration(milliseconds: 150));
+          if (attempt == 11) {
+            // Windows puede mantener bloqueada una imagen durante unos frames.
+            // La prueba funcional ya terminó; no ocultar errores anteriores,
+            // pero tampoco convertir una limpieza temporal en fallo de UI.
+            break;
+          }
+          PaintingBinding.instance.imageCache.clear();
+          PaintingBinding.instance.imageCache.clearLiveImages();
+          await Future<void>.delayed(const Duration(milliseconds: 250));
         }
       }
     });
@@ -361,12 +368,9 @@ void main() {
       await t.pumpAndSettle();
       expect(find.text('Colores'), findsOneWidget);
       final red = find.widgetWithText(FilterChip, 'Rojo');
-      await t.scrollUntilVisible(
-        red,
-        100,
-        scrollable: find.byType(Scrollable).first,
-      );
       expect(red, findsOneWidget);
+      await t.ensureVisible(red);
+      await t.pumpAndSettle();
       await t.tap(red);
       await t.pumpAndSettle();
       await capture(t, 'colores_desplegados');
