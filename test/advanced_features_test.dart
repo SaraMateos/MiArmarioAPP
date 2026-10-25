@@ -134,6 +134,29 @@ void main() {
       ], profile: p),
       isEmpty,
     );
+
+    final accessoryProfile = RecommendationProfile(
+      linkedSets: [
+        ['bag', 'scarf'],
+      ],
+    );
+    final accessorySuggestions = suggest(
+      [
+        g('top', 'Camiseta'),
+        g('bottom', 'Pantalón'),
+        g('bag', 'Bolso'),
+        g('scarf', 'Bufanda'),
+      ],
+      profile: accessoryProfile,
+      climate: Climate.mild,
+    );
+    expect(accessorySuggestions, isNotEmpty);
+    expect(
+      accessorySuggestions.every(
+        (s) => s.garments.map((g) => g.id).toSet().containsAll(['bag', 'scarf']),
+      ),
+      true,
+    );
   });
   test('Estilo y protección lluvia/viento cambian la prioridad sin inventar protección', () {
     final pieces = [
