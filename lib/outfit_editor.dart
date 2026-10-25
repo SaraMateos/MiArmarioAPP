@@ -461,6 +461,17 @@ class _OutfitEditorState extends State<OutfitEditor> {
                 ],
               ),
               const SizedBox(height: 12),
+              TextFormField(
+                controller: name,
+                maxLength: 120,
+                decoration: const InputDecoration(
+                  labelText: 'Nombre del outfit',
+                ),
+                validator: (value) => (value == null || value.trim().isEmpty)
+                    ? 'Escribe un nombre para el outfit.'
+                    : null,
+              ),
+              const SizedBox(height: 12),
               MultiChoice(
                 label: 'Ocasiones',
                 values: occasions,
