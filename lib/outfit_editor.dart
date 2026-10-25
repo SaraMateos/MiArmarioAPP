@@ -408,50 +408,39 @@ class _OutfitEditorState extends State<OutfitEditor> {
                 ),
               Wrap(
                 spacing: 8,
+                runSpacing: 4,
                 children: [
-                  for (final source in [
-                    ImageSource.camera,
-                    ImageSource.gallery,
-                  ])
-                    TextButton.icon(
-                      icon: Icon(
-                        source == ImageSource.camera
-                            ? Icons.camera_alt
-                            : Icons.photo_library,
-                      ),
-                      label: Text(
-                        source == ImageSource.camera
-                            ? 'Foto puesto'
-                            : 'Elegir referencia',
-                      ),
-                      onPressed: () async {
-                        try {
-                          final photo = await ImagePicker().pickImage(
-                            source: source,
-                            maxWidth: 1600,
-                            maxHeight: 1600,
-                            imageQuality: 85,
-                          );
-                          if (photo != null && mounted) {
-                            setState(() {
-                              pendingReference = photo.path;
-                              removeReference = false;
-                            });
-                          }
-                        } catch (e) {
-                          if (context.mounted) {
-                            message(context, errorMessage(e));
-                          }
+                  TextButton.icon(
+                    icon: const Icon(Icons.camera_alt),
+                    label: const Text('Foto puesto'),
+                    onPressed: () async {
+                      try {
+                        final photo = await ImagePicker().pickImage(
+                          source: ImageSource.camera,
+                          maxWidth: 1600,
+                          maxHeight: 1600,
+                          imageQuality: 85,
+                        );
+                        if (photo != null && mounted) {
+                          setState(() {
+                            pendingReference = photo.path;
+                            removeReference = false;
+                          });
                         }
-                      },
-                    ),
+                      } catch (e) {
+                        if (context.mounted) {
+                          message(context, errorMessage(e));
+                        }
+                      }
+                    },
+                  ),
                   if (pendingReference != null || referencePhoto.isNotEmpty)
                     TextButton(
                       onPressed: () => setState(() {
                         pendingReference = null;
                         removeReference = true;
                       }),
-                      child: const Text('Quitar referencia'),
+                      child: const Text('Quitar foto'),
                     ),
                   TextButton.icon(
                     icon: const Icon(Icons.image_outlined),
@@ -481,9 +470,6 @@ class _OutfitEditorState extends State<OutfitEditor> {
                 decoration: const InputDecoration(
                   labelText: 'Nombre del outfit',
                 ),
-                validator: (v) => v == null || v.trim().isEmpty
-                    ? 'Introduce un nombre'
-                    : null,
               ),
               const SizedBox(height: 12),
               MultiChoice(
