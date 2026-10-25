@@ -187,8 +187,16 @@ void main() {
       final controller = tester.widget<TextFormField>(name).controller!;
       await tester.enterText(name, 'Mis vaqueros');
       await tester.scrollUntilVisible(
-        find.text('Detectar datos'),
+        find.text('Herramientas de fotografía'),
         -150,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Herramientas de fotografía'));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(
+        find.text('Detectar datos'),
+        150,
         scrollable: find.byType(Scrollable).first,
       );
       await tester.pumpAndSettle();
