@@ -150,29 +150,51 @@ class _OutfitEditorState extends State<OutfitEditor> {
   double _defaultScale(Garment garment) {
     final kind = _garmentKind(garment);
     if (kind.contains('calzado') || kind.contains('zapato') ||
-        kind.contains('bota') || kind.contains('sandalia')) return .62;
+        kind.contains('bota') || kind.contains('sandalia')) {
+      return .62;
+    }
     if (kind.contains('accesorio') || kind.contains('bolso') ||
-        kind.contains('bufanda') || kind.contains('gorro')) return .72;
+        kind.contains('bufanda') || kind.contains('gorro')) {
+      return .72;
+    }
     if (kind.contains('inferior') || kind.contains('pantal') ||
-        kind.contains('falda') || kind.contains('short')) return .94;
-    if (kind.contains('vestido') || kind.contains('mono')) return 1.02;
+        kind.contains('falda') || kind.contains('short')) {
+      return .94;
+    }
+    if (kind.contains('vestido') || kind.contains('mono')) {
+      return 1.02;
+    }
     if (kind.contains('abrigo') || kind.contains('chaqueta') ||
-        kind.contains('americana') || kind.contains('chaleco')) return 1.02;
+        kind.contains('americana') || kind.contains('chaleco')) {
+      return 1.02;
+    }
     return .92;
   }
 
   int _layerPriority(Garment g) {
     final kind = _garmentKind(g);
     if (kind.contains('calzado') || kind.contains('zapato') ||
-        kind.contains('bota') || kind.contains('sandalia')) return 0;
+        kind.contains('bota') || kind.contains('sandalia')) {
+      return 0;
+    }
     if (kind.contains('inferior') || kind.contains('pantal') ||
-        kind.contains('falda') || kind.contains('short')) return 1;
-    if (kind.contains('vestido') || kind.contains('mono')) return 2;
+        kind.contains('falda') || kind.contains('short')) {
+      return 1;
+    }
+    if (kind.contains('vestido') || kind.contains('mono')) {
+      return 2;
+    }
     if (kind.contains('camiseta') || kind.contains('camisa') ||
-        kind.contains('blusa') || kind.contains('polo')) return 3;
-    if (kind.contains('jersey') || kind.contains('sudadera')) return 4;
+        kind.contains('blusa') || kind.contains('polo')) {
+      return 3;
+    }
+    if (kind.contains('jersey') || kind.contains('sudadera')) {
+      return 4;
+    }
     if (kind.contains('chaqueta') || kind.contains('abrigo') ||
-        kind.contains('americana') || kind.contains('chaleco')) return 5;
+        kind.contains('americana') || kind.contains('chaleco')) {
+      return 5;
+    }
     return 2;
   }
 
