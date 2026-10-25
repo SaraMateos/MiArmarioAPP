@@ -47,7 +47,7 @@ void main() {
         PaintingBinding.instance.imageCache.clear();
         PaintingBinding.instance.imageCache.clearLiveImages();
         await repo.close();
-        await root.delete(recursive: true);
+        if (await root.exists()) await root.delete(recursive: true);
       });
       for (final entry in [
         ('g1', 'Camiseta blanca', 'camiseta', 'Parte superior', 'Blanco'),
