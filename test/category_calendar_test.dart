@@ -99,7 +99,7 @@ void main() {
       await repo.db.setVersion(3);
       await repo.close();
       repo = await WardrobeRepository.open(root);
-      expect(await repo.db.getVersion(), 5);
+      expect(await repo.db.getVersion(), 6);
       expect((await repo.garments()).single.id, 'g');
       expect((await repo.garments()).single.subtype, '');
     } finally {
