@@ -98,7 +98,7 @@ void main() {
       g('b1', 'Pantalón'),
       g('b2', 'Vaqueros'),
       g('s1', 'Botas'),
-      g('s2', 'Zapatillas'),
+      g('s2', 'Botas'),
     ];
     final ideas = suggest(pieces, climate: Climate.hot);
     expect(ideas.length, greaterThanOrEqualTo(3));
