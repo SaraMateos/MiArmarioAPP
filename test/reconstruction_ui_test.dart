@@ -13,6 +13,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:mi_armario/home.dart';
+import 'package:mi_armario/auto_framed_photo.dart';
 import 'package:mi_armario/models.dart';
 import 'package:mi_armario/repository.dart';
 import 'package:mi_armario/garment_editor.dart';
