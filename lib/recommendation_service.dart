@@ -98,10 +98,17 @@ class RecommendationService {
       final days = u.lastWorn == null
           ? 365
           : calendarDayDifference(date, u.lastWorn!);
+      // Balance three signals: personal preference, total use, and time
+      // since last wear. Keep the bonus bounded so an old item cannot
+      // outrank basic compatibility (weather, occasion, and valid layers).
+      final rotationBonus = min(14, max(0, days)).toDouble();
+      final usagePenalty = min(10, u.count.toDouble());
+      final recentWearPenalty = days >= 0 && days < 4 ? 20 : 0;
       return (preferences?.score(g) ?? 0) +
-          14 / (1 + u.count) +
-          min(10, max(0, days)).toDouble() -
-          (days >= 0 && days < 4 ? 18 : 0);
+          10 / (1 + u.count) +
+          rotationBonus -
+          usagePenalty -
+          recentWearPenalty;
     }
 
     final random = Random(
