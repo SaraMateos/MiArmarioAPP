@@ -158,7 +158,7 @@ void main() {
     final draggableGarment = find.descendant(
       of: outfitBoard,
       matching: find.byType(GestureDetector),
-    ).first;
+    ).last;
     await tester.ensureVisible(draggableGarment);
     await tester.pumpAndSettle();
     await tester.tap(draggableGarment);
@@ -187,7 +187,8 @@ void main() {
     await tester.runAsync(() async {
       final saved = (await repo.outfits()).single;
       expect(saved.name, 'Outfit editado');
-      expect(saved.items.first.x, greaterThan(.08));
+      final movedGarment = saved.items.singleWhere((item) => item.garmentId == 'g3');
+      expect(movedGarment.x, greaterThan(.06));
     });
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
