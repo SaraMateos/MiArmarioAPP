@@ -158,7 +158,7 @@ void main() {
     final draggableGarment = find.descendant(
       of: outfitBoard,
       matching: find.byType(GestureDetector),
-    ).last;
+    ).first;
     await tester.ensureVisible(draggableGarment);
     await tester.pumpAndSettle();
     await tester.tap(draggableGarment);
