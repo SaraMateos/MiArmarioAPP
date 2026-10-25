@@ -399,22 +399,20 @@ class RecommendationService {
     }
     candidates.sort((a, b) => b.score.compareTo(a.score));
     final result = <OutfitSuggestion>[], signatures = <String>{};
-    // Favor distinct alternatives instead of six near-identical outfits.
+    // Diversify using Jaccard similarity: shared pieces divided by the
+    // union of both outfits. This avoids treating a short outfit and a long
+    // outfit as nearly identical just because most pieces of the shorter one
+    // are shared.
     for (final s in candidates) {
       if (!signatures.add(s.signature)) continue;
-      if (result.isNotEmpty &&
-          result.any(
-            (r) =>
-                r.garments
-                        .map((g) => g.id)
-                        .toSet()
-                        .intersection(s.garments.map((g) => g.id).toSet())
-                        .length /
-                    min(r.garments.length, s.garments.length) >
-                .8,
-          )) {
-        continue;
-      }
+      final ids = s.garments.map((g) => g.id).toSet();
+      final tooSimilar = result.any((r) {
+        final otherIds = r.garments.map((g) => g.id).toSet();
+        final shared = otherIds.intersection(ids).length;
+        final total = otherIds.union(ids).length;
+        return total > 0 && shared / total > .65;
+      });
+      if (tooSimilar) continue;
       result.add(s);
       if (result.length >= limit) break;
     }
