@@ -16,6 +16,14 @@ Future<void> waitForWidget(WidgetTester tester, Finder finder) async {
       return;
     }
   }
+  final frameworkException = tester.takeException();
+  final visibleTexts = find
+      .byType(Text)
+      .evaluate()
+      .map((element) => (element.widget as Text).data)
+      .whereType<String>()
+      .take(80)
+      .join(' | ');
   throw TestFailure(
     'La interfaz no ha llegado al estado esperado. '
     'Elemento buscado: $finder. '
@@ -23,6 +31,9 @@ Future<void> waitForWidget(WidgetTester tester, Finder finder) async {
     'Indicadores circulares: '
     '${find.byType(CircularProgressIndicator).evaluate().length}. '
     'Indicadores lineales: '
-    '${find.byType(LinearProgressIndicator).evaluate().length}.',
+    '${find.byType(LinearProgressIndicator).evaluate().length}. '
+    'Scaffold: ${find.byType(Scaffold).evaluate().length}. '
+    'Textos presentes: [$visibleTexts]. '
+    'Excepción de Flutter: $frameworkException',
   );
 }
