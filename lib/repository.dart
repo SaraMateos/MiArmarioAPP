@@ -96,9 +96,24 @@ class WardrobeRepository {
           );
         }
         if (oldVersion < 6) {
-          await db.execute('ALTER TABLE outfit_items ADD COLUMN mannequin_x REAL NOT NULL DEFAULT 0.3');
-          await db.execute('ALTER TABLE outfit_items ADD COLUMN mannequin_y REAL NOT NULL DEFAULT 0.2');
-          await db.execute('ALTER TABLE outfit_items ADD COLUMN mannequin_scale REAL NOT NULL DEFAULT 1.0');
+          final columns = (await db.rawQuery('PRAGMA table_info(outfit_items)'))
+              .map((row) => row['name'] as String)
+              .toSet();
+          if (!columns.contains('mannequin_x')) {
+            await db.execute(
+              'ALTER TABLE outfit_items ADD COLUMN mannequin_x REAL NOT NULL DEFAULT 0.3',
+            );
+          }
+          if (!columns.contains('mannequin_y')) {
+            await db.execute(
+              'ALTER TABLE outfit_items ADD COLUMN mannequin_y REAL NOT NULL DEFAULT 0.2',
+            );
+          }
+          if (!columns.contains('mannequin_scale')) {
+            await db.execute(
+              'ALTER TABLE outfit_items ADD COLUMN mannequin_scale REAL NOT NULL DEFAULT 1.0',
+            );
+          }
         }
         if (oldVersion < 5) {
           await db.execute(
