@@ -30,10 +30,6 @@ class _OutfitEditorState extends State<OutfitEditor> {
   final form = GlobalKey<FormState>();
   late TextEditingController name, notes;
   late List<OutfitItem> items;
-  late List<OutfitItem> mannequinItems;
-  bool mannequinView = false;
-
-  List<OutfitItem> get visibleItems => mannequinView ? mannequinItems : items;
   late List<String> occasionTags;
   bool favorite = false, busy = false;
   int? selected;
@@ -46,10 +42,6 @@ class _OutfitEditorState extends State<OutfitEditor> {
     name = TextEditingController(text: widget.outfit?.name ?? '');
     notes = TextEditingController(text: widget.outfit?.notes ?? '');
     items = widget.outfit?.items.map((i) => i.copy()).toList() ?? [];
-    mannequinItems = items.map((i) => OutfitItem(
-      garmentId: i.garmentId, x: i.mannequinX, y: i.mannequinY,
-      scale: i.mannequinScale,
-    )).toList();
     occasionTags = [
       ...widget.outfit?.occasionTags ?? [occasions.first],
     ];
@@ -91,22 +83,7 @@ class _OutfitEditorState extends State<OutfitEditor> {
             y: _defaultPosition(garment, items.length).$2,
           ),
         );
-        mannequinItems.add(OutfitItem(
-          garmentId: garment.id,
-          x: _defaultPosition(garment, items.length - 1).$1,
-          y: _defaultPosition(garment, items.length - 1).$2,
-        ));
         _sortLayers();
-        // Solo se recoloca la prenda recién añadida; no se alteran ajustes
-        // manuales que el usuario ya haya hecho en el resto del outfit.
-        final newMannequinItem = mannequinItems.firstWhere(
-          (item) => item.garmentId == garment.id,
-        );
-        final mannequinPosition = _defaultPosition(garment, mannequinItems.length - 1);
-        newMannequinItem
-          ..x = mannequinPosition.$1
-          ..y = mannequinPosition.$2
-          ..scale = _defaultScale(garment);
         selected = items.indexWhere((i) => i.garmentId == garment.id);
       });
     }
@@ -147,30 +124,6 @@ class _OutfitEditorState extends State<OutfitEditor> {
     return (.5, .43);
   }
 
-  double _defaultScale(Garment garment) {
-    final kind = _garmentKind(garment);
-    if (kind.contains('calzado') || kind.contains('zapato') ||
-        kind.contains('bota') || kind.contains('sandalia')) {
-      return .62;
-    }
-    if (kind.contains('accesorio') || kind.contains('bolso') ||
-        kind.contains('bufanda') || kind.contains('gorro')) {
-      return .72;
-    }
-    if (kind.contains('inferior') || kind.contains('pantal') ||
-        kind.contains('falda') || kind.contains('short')) {
-      return .94;
-    }
-    if (kind.contains('vestido') || kind.contains('mono')) {
-      return 1.02;
-    }
-    if (kind.contains('abrigo') || kind.contains('chaqueta') ||
-        kind.contains('americana') || kind.contains('chaleco')) {
-      return 1.02;
-    }
-    return .92;
-  }
-
   int _layerPriority(Garment g) {
     final kind = _garmentKind(g);
     if (kind.contains('calzado') || kind.contains('zapato') ||
@@ -204,32 +157,6 @@ class _OutfitEditorState extends State<OutfitEditor> {
         _layerPriority(byId[a.garmentId] ?? widget.garments.first)
             .compareTo(_layerPriority(byId[b.garmentId] ?? widget.garments.first));
     items.sort(compare);
-    mannequinItems.sort(compare);
-  }
-
-  void _positionOnMannequin(List<OutfitItem> target) {
-    for (final item in target) {
-      final garment = widget.garments.where((g) => g.id == item.garmentId).firstOrNull;
-      if (garment == null) continue;
-      final pos = _defaultPosition(garment, target.indexOf(item));
-      item.x = pos.$1;
-      item.y = pos.$2;
-      item.scale = _defaultScale(garment);
-    }
-  }
-
-  void arrangeOnFigure() {
-    setState(() {
-      _positionOnMannequin(mannequinItems);
-      selected = null;
-    });
-  }
-
-  void switchView(bool next) {
-    setState(() {
-      mannequinView = next;
-      selected = null;
-    });
   }
 
   Future<void> save() async {
@@ -259,9 +186,6 @@ class _OutfitEditorState extends State<OutfitEditor> {
             for (var i = 0; i < items.length; i++)
               OutfitItem(garmentId: items[i].garmentId,
                 x: items[i].x, y: items[i].y, scale: items[i].scale,
-                mannequinX: mannequinItems.firstWhere((m) => m.garmentId == items[i].garmentId).x,
-                mannequinY: mannequinItems.firstWhere((m) => m.garmentId == items[i].garmentId).y,
-                mannequinScale: mannequinItems.firstWhere((m) => m.garmentId == items[i].garmentId).scale,
               ),
           ],
           notes: notes.text.trim(),
@@ -306,14 +230,6 @@ class _OutfitEditorState extends State<OutfitEditor> {
                 style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 12),
-              SegmentedButton<bool>(
-                segments: const [
-                  ButtonSegment(value: false, icon: Icon(Icons.dashboard_customize_outlined), label: Text('Libre')),
-                  ButtonSegment(value: true, icon: Icon(Icons.accessibility_new), label: Text('Maniquí')),
-                ],
-                selected: {mannequinView},
-                onSelectionChanged: (values) => switchView(values.first),
-              ),
               const SizedBox(height: 8),
               Align(
                 alignment: Alignment.centerRight,
@@ -332,16 +248,16 @@ class _OutfitEditorState extends State<OutfitEditor> {
               OutfitBoard(
                 repo: widget.repo,
                 garments: widget.garments,
-                items: visibleItems,
-                showFigure: mannequinView,
+                items: items,
+                showFigure: false,
                 selected: selected,
                 onSelect: (i) => setState(() => selected = i),
                 onMove: (i, dx, dy) => setState(() {
-                  visibleItems[i].x = (visibleItems[i].x + dx).clamp(0.0, 1.0);
-                  visibleItems[i].y = (visibleItems[i].y + dy).clamp(0.0, 1.0);
+                  items[i].x = (items[i].x + dx).clamp(0.0, 1.0);
+                  items[i].y = (items[i].y + dy).clamp(0.0, 1.0);
                 }),
               ),
-              if (!mannequinView && selected != null && selected! < visibleItems.length) ...[
+              if (selected != null && selected! < items.length) ...[
                 const SizedBox(height: 10),
                 Card(
                   margin: EdgeInsets.zero,
@@ -356,16 +272,15 @@ class _OutfitEditorState extends State<OutfitEditor> {
                         const Text('Tamaño'),
                         Expanded(child: Slider(
                           min: .5, max: 1.6,
-                          value: visibleItems[selected!].scale.clamp(.5, 1.6),
-                          onChanged: (v) => setState(() => visibleItems[selected!].scale = v),
+                          value: items[selected!].scale.clamp(.5, 1.6),
+                          onChanged: (v) => setState(() => items[selected!].scale = v),
                         )),
                         IconButton(
                           tooltip: 'Eliminar prenda',
                           visualDensity: VisualDensity.compact,
                           onPressed: () => setState(() {
-                            final garmentId = visibleItems[selected!].garmentId;
+                            final garmentId = items[selected!].garmentId;
                             items.removeWhere((item) => item.garmentId == garmentId);
-                            mannequinItems.removeWhere((item) => item.garmentId == garmentId);
                             selected = null;
                           }),
                           icon: const Icon(Icons.delete_outline, color: Colors.red),
@@ -377,38 +292,38 @@ class _OutfitEditorState extends State<OutfitEditor> {
                         children: [
                           TextButton.icon(
                             onPressed: () => setState(() {
-                              visibleItems[selected!].x = .5;
-                              visibleItems[selected!].y = .5;
+                              items[selected!].x = .5;
+                              items[selected!].y = .5;
                             }),
                             icon: const Icon(Icons.center_focus_strong, size: 18),
                             label: const Text('Centrar'),
                           ),
                           TextButton.icon(
                             onPressed: () => setState(() {
-                              final garmentId = visibleItems[selected!].garmentId;
-                              for (final list in [items, mannequinItems]) {
+                              final garmentId = items[selected!].garmentId;
+                              for (final list in [items]) {
                                 final index = list.indexWhere((item) => item.garmentId == garmentId);
                                 if (index >= 0) {
                                   final item = list.removeAt(index);
                                   list.add(item);
                                 }
                               }
-                              selected = visibleItems.indexWhere((item) => item.garmentId == garmentId);
+                              selected = items.indexWhere((item) => item.garmentId == garmentId);
                             }),
                             icon: const Icon(Icons.flip_to_front, size: 18),
                             label: const Text('Al frente'),
                           ),
                           TextButton.icon(
                             onPressed: () => setState(() {
-                              final garmentId = visibleItems[selected!].garmentId;
-                              for (final list in [items, mannequinItems]) {
+                              final garmentId = items[selected!].garmentId;
+                              for (final list in [items]) {
                                 final index = list.indexWhere((item) => item.garmentId == garmentId);
                                 if (index >= 0) {
                                   final item = list.removeAt(index);
                                   list.insert(0, item);
                                 }
                               }
-                              selected = visibleItems.indexWhere((item) => item.garmentId == garmentId);
+                              selected = items.indexWhere((item) => item.garmentId == garmentId);
                             }),
                             icon: const Icon(Icons.vertical_align_bottom, size: 18),
                             label: const Text('Al fondo'),
@@ -419,7 +334,7 @@ class _OutfitEditorState extends State<OutfitEditor> {
                   ),
                 ),
               ],
-              if (!mannequinView && items.isNotEmpty) ...[
+              if (items.isNotEmpty) ...[
                 const SizedBox(height: 10),
                 Text('Prendas', style: Theme.of(context).textTheme.titleSmall),
                 const SizedBox(height: 8),
@@ -480,21 +395,6 @@ class _OutfitEditorState extends State<OutfitEditor> {
                     },
                   ),
                 ),
-              ],
-              if (mannequinView) ...[
-                Align(
-                  alignment: Alignment.center,
-                  child: TextButton.icon(
-                    onPressed: items.isEmpty ? null : arrangeOnFigure,
-                    icon: const Icon(Icons.auto_awesome, size: 18),
-                    label: const Text('Reordenar prendas'),
-                    style: TextButton.styleFrom(
-                      visualDensity: VisualDensity.compact,
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 4),
               ],
               const SizedBox(height: 16),
               if (pendingReference != null ||
@@ -557,7 +457,7 @@ class _OutfitEditorState extends State<OutfitEditor> {
                                       ? widget.outfit!.name
                                       : 'Mi outfit')
                                   : name.text.trim(),
-                              items: visibleItems,
+                              items: items,
                               occasionTags: occasionTags,
                             ),
                             widget.garments,
