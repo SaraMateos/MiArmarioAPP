@@ -100,10 +100,7 @@ void main() {
         ),
       ),
     );
-    await waitForWidget(
-      tester,
-      find.text('Todavía no hay outfit planificado para hoy.'),
-    );
+    await waitForWidget(tester, find.text('Buscar una prenda'));
     await tester.tap(find.text('Armario'));
     await waitForWidget(tester, find.bySemanticsLabel('Camiseta blanca'));
     Future<void> capture(String name) async {
