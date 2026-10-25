@@ -172,7 +172,9 @@ void main() {
     await prepare(t, status: 'En lavado');
     await launch(t, DailyToolsScreen(repo: repo, laundry: true));
     await waitForWidget(t, find.text('Pantalón azul'));
-    await t.tap(find.byType(Checkbox).first);
+    await t.tap(find.byType(CheckboxListTile).first);
+    await t.pumpAndSettle();
+    expect(find.text('Ya están limpias (1)'), findsOneWidget);
     await capture(t, 'lavado');
     await t.tap(find.text('Ya están limpias (1)'));
     await waitForWidget(t, find.text('No hay prendas pendientes.'));
@@ -264,8 +266,7 @@ void main() {
         );
       });
       await launch(t, WardrobeHome(repo: repo));
-      await waitForWidget(t, find.text('Tu ropa, a mano'));
-      await waitForWidget(t, find.text('Tu ropa, a mano'));
+      await waitForWidget(t, find.text('Buscar una prenda'));
       expect(find.text('Pantalón azul'), findsNothing);
       expect(find.text('Abrigo negro'), findsNothing);
       expect(find.bySemanticsLabel('Abrigo negro'), findsOneWidget);
@@ -337,12 +338,14 @@ void main() {
       );
       await t.tap(section);
       await t.pumpAndSettle();
+      final red = find.widgetWithText(FilterChip, 'Rojo');
       await t.scrollUntilVisible(
-        find.text('Rojo'),
+        red,
         100,
         scrollable: find.byType(Scrollable).first,
       );
-      await t.tap(find.text('Rojo'));
+      expect(red, findsOneWidget);
+      await t.tap(red);
       await t.pumpAndSettle();
       await capture(t, 'colores_desplegados');
       expect(t.takeException(), isNull);
