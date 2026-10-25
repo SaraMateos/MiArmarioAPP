@@ -449,12 +449,21 @@ class _OutfitEditorState extends State<OutfitEditor> {
                   ),
                 ),
               ],
-              if (mannequinView) OutlinedButton.icon(
-                onPressed: items.isEmpty ? null : arrangeOnFigure,
-                icon: const Icon(Icons.accessibility_new),
-                label: const Text('Recolocar sobre el maniquí'),
-              ),
-              const SizedBox(height: 8),
+              if (mannequinView) ...[
+                Align(
+                  alignment: Alignment.center,
+                  child: TextButton.icon(
+                    onPressed: items.isEmpty ? null : arrangeOnFigure,
+                    icon: const Icon(Icons.auto_awesome, size: 18),
+                    label: const Text('Reordenar prendas'),
+                    style: TextButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 4),
+              ],
               const SizedBox(height: 16),
               if (pendingReference != null ||
                   (!removeReference && referencePhoto.isNotEmpty))
