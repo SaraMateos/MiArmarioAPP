@@ -56,7 +56,7 @@ void main() {
     expect(find.text('Qué me pongo'), findsOneWidget);
     await tester.tap(find.byTooltip('Más herramientas'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Copias de seguridad'));
+    await tester.tap(find.textContaining('Copias de seguridad'));
     await waitForWidget(tester, find.text('Exportar copia de seguridad'));
     expect(find.text('Exportar copia de seguridad'), findsOneWidget);
     await tester.binding.handlePopRoute();
