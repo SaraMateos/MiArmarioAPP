@@ -29,6 +29,7 @@ class WardrobeHome extends StatefulWidget {
 }
 
 class _WardrobeHomeState extends State<WardrobeHome> {
+  final ideasKey = GlobalKey<RecommendationsScreenState>();
   int tab = 0; // Armario es la pantalla inicial.
   bool loading = true, busy = false, onlyFavorites = false;
   String query = '',
@@ -985,49 +986,19 @@ class _WardrobeHomeState extends State<WardrobeHome> {
     );
   }
 
-  bool sameWeatherCity(WeatherCity a, WeatherCity b) =>
-      a.latitude == b.latitude && a.longitude == b.longitude;
-  Widget ideas() => ListView(
-    padding: const EdgeInsets.all(20),
-    children: [
-      Text('Ideas para vestir', style: Theme.of(context).textTheme.headlineMedium),
-      const SizedBox(height: 8),
-      const Text('Descubre nuevas combinaciones de tu ropa, según tu estilo, la ocasión y el tiempo.'),
-      const SizedBox(height: 20),
-      Card(
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () => openIdeas(),
-          child: const Padding(
-            padding: EdgeInsets.all(24),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Icon(Icons.auto_awesome, size: 36),
-              SizedBox(height: 16),
-              Text('Crear nuevas ideas', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-              SizedBox(height: 8),
-              Text('Combina prendas, ajusta las preferencias y guarda tus propuestas favoritas.'),
-              SizedBox(height: 18),
-              Row(children: [Text('Explorar combinaciones'), Spacer(), Icon(Icons.arrow_forward)]),
-            ]),
-          ),
-        ),
-      ),
-      const SizedBox(height: 12),
-      OutlinedButton.icon(
-        onPressed: () => openIdeas(),
-        icon: const Icon(Icons.wb_sunny_outlined),
-        label: const Text('Ideas según el tiempo y la ocasión'),
-      ),
-    ],
+  Widget ideas() => RecommendationsScreen(
+    key: ideasKey,
+    repo: repo,
+    embedded: true,
   );
   @override
   Widget build(BuildContext context) => PopScope(
     canPop: !busy,
     child: Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Mi Armario',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Text(
+          tab == 2 ? 'Ideas para vestirte' : 'Mi Armario',
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
           IconButton(
@@ -1035,6 +1006,12 @@ class _WardrobeHomeState extends State<WardrobeHome> {
             icon: const Icon(Icons.more_horiz),
             onPressed: busy ? null : moreTools,
           ),
+          if (tab == 2)
+            IconButton(
+              tooltip: 'Otras propuestas',
+              icon: const Icon(Icons.refresh_rounded),
+              onPressed: busy ? null : () => ideasKey.currentState?.another(),
+            ),
           if (tab == 0)
             IconButton(
               tooltip: 'Añadir varias fotos',
