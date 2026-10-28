@@ -233,13 +233,36 @@ class _OutfitDraftScreenState extends State<OutfitDraftScreen> {
     body: ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        CategoryOutfitView(repo: widget.repo, garments: pieces),
+        CategoryOutfitView(
+          repo: widget.repo,
+          garments: pieces,
+          compact: true,
+        ),
         const SizedBox(height: 12),
-        const Text(
-          'Fija las prendas que quieres conservar al pedir otra combinación. Cambiar una pieza mantiene todas las demás.',
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: .45),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: const Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.lock_outline),
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Pulsa el candado para conservar una prenda. Usa las flechas para sustituir solo una; las demás se mantienen.',
+                ),
+              ),
+            ],
+          ),
         ),
         for (final g in pieces)
           Card(
+            color: locked.contains(g.id)
+                ? Theme.of(context).colorScheme.secondaryContainer.withValues(alpha: .3)
+                : null,
             child: ListTile(
               leading: SizedBox(
                 width: 50,
@@ -247,7 +270,9 @@ class _OutfitDraftScreenState extends State<OutfitDraftScreen> {
                 child: Photo(widget.repo.photoPath(g.photo)),
               ),
               title: Text(g.name),
-              subtitle: Text('${g.category} · ${g.color}'),
+              subtitle: Text(
+                '${g.category} · ${g.color}${locked.contains(g.id) ? ' · Fijada' : ''}',
+              ),
               trailing: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
