@@ -111,6 +111,11 @@ void main() {
       expect(find.text('Por ciudad'), findsOneWidget);
       expect(find.text('Manual'), findsOneWidget);
       expect(find.text('Estilo preferido'), findsNothing);
+      expect(find.text('Ocasión'), findsNothing);
+      expect(find.text('Revisar categorías y disponibilidad'), findsNothing);
+      expect(find.textContaining('Previsión de Open-Meteo'), findsNothing);
+      expect(find.text('Otras propuestas'), findsNothing);
+      expect(find.byTooltip('Otras propuestas'), findsOneWidget);
       await tester.tap(find.text('Personaliza tu idea'));
       await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
