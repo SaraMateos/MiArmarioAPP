@@ -126,6 +126,7 @@ class OutfitBoard extends StatelessWidget {
   final int? selected;
   final bool allowZoom;
   final bool showFigure;
+  final double? aspectRatio;
   final ValueChanged<int>? onSelect;
   final void Function(int, double, double)? onMove;
   const OutfitBoard({
@@ -136,12 +137,13 @@ class OutfitBoard extends StatelessWidget {
     this.selected,
     this.allowZoom = true,
     this.showFigure = false,
+    this.aspectRatio,
     this.onSelect,
     this.onMove,
   });
   @override
   Widget build(BuildContext context) => AspectRatio(
-    aspectRatio: showFigure ? 1.0 : .85,
+    aspectRatio: aspectRatio ?? (showFigure ? 1.0 : .85),
     child: LayoutBuilder(
       builder: (context, box) {
         return ClipRRect(
@@ -195,6 +197,7 @@ class OutfitBoard extends StatelessWidget {
                                       items: items,
                                       allowZoom: false,
                                       showFigure: showFigure,
+                                      aspectRatio: aspectRatio,
                                     ),
                                   ),
                                 ),
