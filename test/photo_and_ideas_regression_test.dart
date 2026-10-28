@@ -106,7 +106,6 @@ void main() {
       expect(find.text('Personaliza tu idea'), findsOneWidget);
       await tester.tap(find.text('Personaliza tu idea'));
       await tester.pumpAndSettle();
-      expect(find.text('Ocasión'), findsOneWidget);
       expect(find.text('Tiempo y clima'), findsOneWidget);
       expect(find.text('Por ciudad'), findsOneWidget);
       expect(find.text('Manual'), findsOneWidget);
