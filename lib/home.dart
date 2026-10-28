@@ -892,11 +892,25 @@ class _WardrobeHomeState extends State<WardrobeHome> {
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => Navigator.pop(c, e.key),
               ),
+            if (tab == 2)
+              ListTile(
+                leading: const Icon(Icons.thumb_up_off_alt_outlined),
+                title: const Text('Borrar valoraciones de conjuntos'),
+                subtitle: const Text(
+                  'No cambia fecha, clima ni exclusiones',
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.pop(c, 'resetIdeas'),
+              ),
           ],
         ),
       ),
     );
     if (!mounted || selected == null) return;
+    if (selected == 'resetIdeas') {
+      await ideasKey.currentState?.resetRatings();
+      return;
+    }
     if (selected == 'undo') {
       await action(repo.undoLast);
       return;
