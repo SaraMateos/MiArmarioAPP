@@ -236,7 +236,7 @@ class _OutfitDraftScreenState extends State<OutfitDraftScreen> {
         CategoryOutfitView(
           repo: widget.repo,
           garments: pieces,
-          compact: true,
+          compactImages: true,
         ),
         const SizedBox(height: 12),
         Container(
