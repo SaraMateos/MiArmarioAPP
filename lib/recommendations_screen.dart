@@ -889,6 +889,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                                 repo: widget.repo,
                                 garments: s.garments,
                                 compactImages: true,
+                                showNames: false,
                               ),
                               const SizedBox(height: 12),
                               const SizedBox(height: 8),                              Wrap(
