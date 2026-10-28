@@ -708,115 +708,115 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                       'Ocasión · estilo · clima · prendas disponibles',
                     ),
                     children: [
-                  OutlinedButton.icon(
-                    onPressed: () async {
-                      final chosen = await showDatePicker(
-                        context: context,
-                        initialDate: date,
-                        firstDate: DateUtils.dateOnly(DateTime.now()),
-                        lastDate: calendarDayOffset(DateTime.now(), 13),
-                      );
-                      if (chosen != null && mounted) {
-                        date = chosen;
-                        await generate();
-                      }
-                    },
-                    icon: const Icon(Icons.event),
-                    label: Text(
-                      MaterialLocalizations.of(context).formatFullDate(date),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  choice('Estilo preferido', profile.style, outfitStyles, (v) {
-                    profile.style = v;
-                    generate();
-                  }),
-                  const SizedBox(height: 12),
-                  OutlinedButton.icon(
-                    onPressed: excludePieces,
-                    icon: const Icon(Icons.block),
-                    label: Text(
-                      'Excluir prendas este día (${profile.excludedOn(date).length})',
-                    ),
-                  ),
-                  choice('Ocasión', occasion, occasions, (v) {
-                    occasion = v;
-                    generate();
-                  }),
-                  const SizedBox(height: 16),
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    title: const Text('Usar el tiempo de una ciudad'),
-                    value: preferences.automatic,
-                    onChanged: (v) {
-                      if (v && preferences.city == null) {
-                        chooseCity();
-                        return;
-                      }
-                      preferences = ClimatePreferences(
-                        automatic: v,
-                        manual: preferences.manual,
-                        city: preferences.city,
-                      );
-                      generate();
-                    },
-                  ),
-                  if (!preferences.automatic) ...[
-                    SwitchListTile(
-                      title: const Text('Lluvia'),
-                      value: profile.rain,
-                      onChanged: (v) {
-                        profile.rain = v;
-                        generate();
-                      },
-                    ),
-                    SwitchListTile(
-                      title: const Text('Viento fuerte'),
-                      value: profile.wind,
-                      onChanged: (v) {
-                        profile.wind = v;
-                        generate();
-                      },
-                    ),
-                    choice(
-                      'Temperatura manual',
-                      preferences.manual.label,
-                      Climate.values.map((c) => c.label).toList(),
-                      (v) {
-                        preferences = ClimatePreferences(
-                          automatic: false,
-                          manual: Climate.values.firstWhere(
-                            (c) => c.label == v,
-                          ),
-                          city: preferences.city,
-                        );
-                        generate();
-                      },
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Frío: menos de 15 °C · Templado: 15–24 °C · Calor: 25 °C o más',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  ],
-                  if (preferences.automatic) ...[
-                    OutlinedButton.icon(
-                      onPressed: chooseCity,
-                      icon: const Icon(Icons.location_city),
-                      label: Text(preferences.city?.name ?? 'Elegir ciudad'),
-                    ),
-                    if (day != null)
-                      Text(
-                        '${day.min.round()}–${day.max.round()} °C · ${day.climate.label}\nLluvia: ${day.rainProbability?.round().toString() ?? 'sin dato'} % · Viento: ${day.windSpeed?.round().toString() ?? 'sin dato'} km/h',
+                      OutlinedButton.icon(
+                        onPressed: () async {
+                          final chosen = await showDatePicker(
+                            context: context,
+                            initialDate: date,
+                            firstDate: DateUtils.dateOnly(DateTime.now()),
+                            lastDate: calendarDayOffset(DateTime.now(), 13),
+                          );
+                          if (chosen != null && mounted) {
+                            date = chosen;
+                            await generate();
+                          }
+                        },
+                        icon: const Icon(Icons.event),
+                        label: Text(
+                          MaterialLocalizations.of(context).formatFullDate(date),
+                        ),
                       ),
-                    const Text(
-                      'Previsión: Open-Meteo. Solo se consulta el tiempo; las fotos no se envían.',
-                      style: TextStyle(fontSize: 12),
-                    ),
-                  ],
-                  ],
+                      const SizedBox(height: 12),
+                      choice('Estilo preferido', profile.style, outfitStyles, (v) {
+                        profile.style = v;
+                        generate();
+                      }),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        onPressed: excludePieces,
+                        icon: const Icon(Icons.block),
+                        label: Text(
+                          'Excluir prendas este día (${profile.excludedOn(date).length})',
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      choice('Ocasión', occasion, occasions, (v) {
+                        occasion = v;
+                        generate();
+                      }),
+                      const SizedBox(height: 16),
+                      SwitchListTile(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Usar el tiempo de una ciudad'),
+                        value: preferences.automatic,
+                        onChanged: (v) {
+                          if (v && preferences.city == null) {
+                            chooseCity();
+                            return;
+                          }
+                          preferences = ClimatePreferences(
+                            automatic: v,
+                            manual: preferences.manual,
+                            city: preferences.city,
+                          );
+                          generate();
+                        },
+                      ),
+                      if (!preferences.automatic) ...[
+                        SwitchListTile(
+                          title: const Text('Lluvia'),
+                          value: profile.rain,
+                          onChanged: (v) {
+                            profile.rain = v;
+                            generate();
+                          },
+                        ),
+                        SwitchListTile(
+                          title: const Text('Viento fuerte'),
+                          value: profile.wind,
+                          onChanged: (v) {
+                            profile.wind = v;
+                            generate();
+                          },
+                        ),
+                        choice(
+                          'Temperatura manual',
+                          preferences.manual.label,
+                          Climate.values.map((c) => c.label).toList(),
+                          (v) {
+                            preferences = ClimatePreferences(
+                              automatic: false,
+                              manual: Climate.values.firstWhere(
+                                (c) => c.label == v,
+                              ),
+                              city: preferences.city,
+                            );
+                            generate();
+                          },
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Frío: menos de 15 °C · Templado: 15–24 °C · Calor: 25 °C o más',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ],
+                      if (preferences.automatic) ...[
+                        OutlinedButton.icon(
+                          onPressed: chooseCity,
+                          icon: const Icon(Icons.location_city),
+                          label: Text(preferences.city?.name ?? 'Elegir ciudad'),
+                        ),
+                        if (day != null)
+                          Text(
+                            '${day.min.round()}–${day.max.round()} °C · ${day.climate.label}\nLluvia: ${day.rainProbability?.round().toString() ?? 'sin dato'} % · Viento: ${day.windSpeed?.round().toString() ?? 'sin dato'} km/h',
+                          ),
+                        const Text(
+                          'Previsión: Open-Meteo. Solo se consulta el tiempo; las fotos no se envían.',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ],
+                    ],
                   ),
-                  const SizedBox(height: 16),
                   const SizedBox(height: 16),
                   Text(
                     '${garments.length} prendas guardadas · ${garments.where((g) => g.available).length} disponibles',
