@@ -9,12 +9,14 @@ class CategoryOutfitView extends StatelessWidget {
   final List<Garment> garments;
   final Map<String, int> repetitions;
   final bool compact;
+  final bool compactImages;
   const CategoryOutfitView({
     super.key,
     required this.repo,
     required this.garments,
     this.repetitions = const {},
     this.compact = false,
+    this.compactImages = false,
   });
   String _presentationRole(Garment garment) {
     final role = roleOf(garment);
@@ -51,7 +53,7 @@ class CategoryOutfitView extends StatelessWidget {
                     child: ColoredBox(
                       color: const Color(0xffeeeae2),
                       child: SizedBox(
-                        height: compact ? 88 : 130,
+                        height: compact || compactImages ? 88 : 130,
                         width: width,
                         child: Photo(
                           repo.photoPath(g.photo),
