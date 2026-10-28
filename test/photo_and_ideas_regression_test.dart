@@ -101,6 +101,12 @@ void main() {
         tester,
         find.text('Elegir prendas y planificar manualmente'),
       );
+      expect(find.text('Personaliza tu idea'), findsOneWidget);
+      await tester.tap(find.text('Personaliza tu idea'));
+      await tester.pumpAndSettle();
+      expect(find.text('Estilo preferido'), findsOneWidget);
+      await tester.tap(find.text('Personaliza tu idea'));
+      await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
         find.textContaining('Falta una parte inferior'),
         150,
