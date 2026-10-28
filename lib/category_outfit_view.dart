@@ -10,6 +10,7 @@ class CategoryOutfitView extends StatelessWidget {
   final Map<String, int> repetitions;
   final bool compact;
   final bool compactImages;
+  final bool showNames;
   const CategoryOutfitView({
     super.key,
     required this.repo,
@@ -17,6 +18,7 @@ class CategoryOutfitView extends StatelessWidget {
     this.repetitions = const {},
     this.compact = false,
     this.compactImages = false,
+    this.showNames = true,
   });
   String _presentationRole(Garment garment) {
     final role = roleOf(garment);
@@ -62,17 +64,19 @@ class CategoryOutfitView extends StatelessWidget {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 5),
-                  Text(
-                    g.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  Text(
-                    g.subtype.isEmpty ? 'Tipo sin especificar' : g.subtype,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
+                  if (showNames) ...[
+                    const SizedBox(height: 5),
+                    Text(
+                      g.name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    Text(
+                      g.subtype.isEmpty ? 'Tipo sin especificar' : g.subtype,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
                   if ((repetitions[g.id] ?? 0) > 1)
                     Text(
                       '${repetitions[g.id]} veces esta semana',
