@@ -10,11 +10,9 @@ import 'recommendation_service.dart';
 import 'weather_service.dart';
 import 'outfit_editor.dart';
 import 'ui_common.dart';
-import 'category_outfit_view.dart';
 import 'wardrobe_tools.dart';
 import 'outfit_draft_screen.dart';
 import 'week_editor.dart';
-import 'garment_editor.dart';
 
 class RecommendationsScreen extends StatefulWidget {
   final WardrobeRepository repo;
@@ -420,53 +418,6 @@ class RecommendationsScreenState extends State<RecommendationsScreen> {
     }
   }
 
-  Future<void> reviewGarments() async {
-    await showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (sheetContext) => SafeArea(
-        child: SizedBox(
-          height: MediaQuery.sizeOf(sheetContext).height * .65,
-          child: ListView(
-            children: [
-              const ListTile(
-                title: Text('Revisar categorías y disponibilidad'),
-                subtitle: Text(
-                  'Una camiseta y un pantalón deben tener categorías distintas. Cada foto del lote debe guardarse.',
-                ),
-              ),
-              for (final g in garments)
-                ListTile(
-                  leading: SizedBox(
-                    width: 50,
-                    height: 60,
-                    child: Photo(widget.repo.photoPath(g.photo)),
-                  ),
-                  title: Text(g.name),
-                  subtitle: Text('${g.category} · ${g.status}'),
-                  onTap: () async {
-                    await Navigator.push(
-                      sheetContext,
-                      MaterialPageRoute(
-                        builder: (_) =>
-                            GarmentEditor(repo: widget.repo, garment: g),
-                      ),
-                    );
-                    if (sheetContext.mounted) Navigator.pop(sheetContext);
-                  },
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-    if (!mounted) return;
-    garments = await widget.repo.garments();
-    usage = await widget.repo.usageStats();
-    await generate();
-  }
-
   Future<void> manualPlan() async {
     if (busy) return;
     final pieces = await widget.repo.garments();
@@ -650,7 +601,7 @@ class RecommendationsScreenState extends State<RecommendationsScreen> {
                     leading: const Icon(Icons.tune_rounded),
                     title: const Text('Personaliza tu idea'),
                     subtitle: const Text(
-                      'Ocasión · clima · prendas disponibles',
+                      'Fecha · clima · exclusiones',
                     ),
                     children: [
                       Row(
@@ -684,8 +635,7 @@ class RecommendationsScreenState extends State<RecommendationsScreen> {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
