@@ -33,7 +33,9 @@ class CategoryOutfitView extends StatelessWidget {
                 children: [
                   Text(
                     ['Parte superior', 'Abrigos'].contains(roleOf(g))
-                        ? '${roleOf(g)} · ${layerOf(g)}'
+                        ? '${roleOf(g) == 'Parte superior' ? 'Prenda superior' : 'Abrigo'} · ${layerOf(g)}'
+                        : roleOf(g) == 'Parte inferior'
+                        ? 'Prenda inferior'
                         : roleOf(g),
                     style: Theme.of(context).textTheme.labelMedium,
                   ),
