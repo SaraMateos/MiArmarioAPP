@@ -50,6 +50,17 @@ void main() {
     expect(find.text('Crear nuevas ideas'), findsNothing);
     expect(find.text('Ideas según el tiempo y la ocasión'), findsNothing);
     expect(find.byTooltip('Otras propuestas'), findsOneWidget);
+    await tester.tap(find.byTooltip('Más herramientas'));
+    await tester.pumpAndSettle();
+    expect(find.text('Borrar valoraciones de conjuntos'), findsOneWidget);
+    await tester.tap(find.text('Borrar valoraciones de conjuntos'));
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('No cambiará la fecha, el clima ni las prendas excluidas.'),
+      findsOneWidget,
+    );
+    await tester.tap(find.text('Cancelar'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Outfits'));
     await tester.pumpAndSettle();
     expect(find.text('Combina lo que ya tienes'), findsOneWidget);
