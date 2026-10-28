@@ -42,6 +42,14 @@ void main() {
       find.text('Estrena tu armario virtual'),
     );
     expect(find.text('Estrena tu armario virtual'), findsOneWidget);
+    await tester.tap(find.text('Ideas'));
+    await waitForWidget(
+      tester,
+      find.text('Elegir prendas y planificar manualmente'),
+    );
+    expect(find.text('Crear nuevas ideas'), findsNothing);
+    expect(find.text('Ideas según el tiempo y la ocasión'), findsNothing);
+    expect(find.byTooltip('Otras propuestas'), findsOneWidget);
     await tester.tap(find.text('Outfits'));
     await tester.pumpAndSettle();
     expect(find.text('Combina lo que ya tienes'), findsOneWidget);
