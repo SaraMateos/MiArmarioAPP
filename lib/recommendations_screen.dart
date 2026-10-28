@@ -888,11 +888,13 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                                 repo: widget.repo,
                                 garments: s.garments,
                                 items: s.items,
+                                aspectRatio: 1.0,
                               ),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: 10),
                               CategoryOutfitView(
                                 repo: widget.repo,
                                 garments: s.garments,
+                                compact: true,
                               ),
                               const SizedBox(height: 12),
                               Text(
