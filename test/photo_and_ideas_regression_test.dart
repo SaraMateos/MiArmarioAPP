@@ -101,6 +101,8 @@ void main() {
         tester,
         find.text('Elegir prendas y planificar manualmente'),
       );
+      expect(find.text('Tu estilo, tu próxima idea'), findsNothing);
+      expect(find.textContaining('prendas guardadas ·'), findsNothing);
       expect(find.text('Personaliza tu idea'), findsOneWidget);
       await tester.tap(find.text('Personaliza tu idea'));
       await tester.pumpAndSettle();
