@@ -892,7 +892,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                                 showNames: false,
                               ),
                               const SizedBox(height: 12),
-                              const SizedBox(height: 8),                              Wrap(
+                              Wrap(
                                 spacing: 8,
                                 children: [
                                   OutlinedButton.icon(
@@ -950,7 +950,8 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 8),                              if (dateKey(date) == dateKey(DateTime.now()))
+                              const SizedBox(height: 8),
+                              if (dateKey(date) == dateKey(DateTime.now()))
                                 OutlinedButton.icon(
                                   onPressed: () => markUsed(s),
                                   icon: const Icon(Icons.check_circle_outline),
