@@ -1,5 +1,4 @@
 import 'advanced_data.dart';
-import 'advanced_tools_screen.dart';
 
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
