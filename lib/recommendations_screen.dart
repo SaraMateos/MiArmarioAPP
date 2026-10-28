@@ -19,12 +19,18 @@ import 'garment_editor.dart';
 class RecommendationsScreen extends StatefulWidget {
   final WardrobeRepository repo;
   final String? anchorId;
-  const RecommendationsScreen({super.key, required this.repo, this.anchorId});
+  final bool embedded;
+  const RecommendationsScreen({
+    super.key,
+    required this.repo,
+    this.anchorId,
+    this.embedded = false,
+  });
   @override
-  State<RecommendationsScreen> createState() => _RecommendationsScreenState();
+  State<RecommendationsScreen> createState() => RecommendationsScreenState();
 }
 
-class _RecommendationsScreenState extends State<RecommendationsScreen> {
+class RecommendationsScreenState extends State<RecommendationsScreen> {
   final weather = WeatherService();
   final cityQuery = TextEditingController();
   List<Garment> garments = [];
@@ -220,6 +226,26 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     } finally {
       if (mounted) setState(() => busy = false);
     }
+  }
+
+  void another() {
+    if (busy) return;
+    seed++;
+    generate();
+  }
+
+  Future<void> resetPreferences() async {
+    if (!await confirm(
+      context,
+      'Restablecer preferencias',
+      'Se olvidarán tus valoraciones de combinaciones.',
+      action: 'Restablecer',
+    )) {
+      return;
+    }
+    style = StylePreferences();
+    await widget.repo.saveSetting('style_preferences', style.encode());
+    await generate();
   }
 
   Future<void> generate() async {
@@ -601,35 +627,8 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
   @override
   Widget build(BuildContext context) {
     final day = preferences.automatic ? forecast?.forDate(date) : null;
-    return PopScope(
-      canPop: !busy,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Ideas para vestirte'),
-          actions: [
-            IconButton(
-              tooltip: 'Restablecer preferencias',
-              icon: const Icon(Icons.restart_alt),
-              onPressed: () async {
-                if (await confirm(
-                  context,
-                  'Restablecer preferencias',
-                  'Se olvidarán tus valoraciones de combinaciones.',
-                  action: 'Restablecer',
-                )) {
-                  style = StylePreferences();
-                  await widget.repo.saveSetting(
-                    'style_preferences',
-                    style.encode(),
-                  );
-                  await generate();
-                }
-              },
-            ),
-          ],
-        ),
-        body: Stack(
-          children: [
+    final screenBody = Stack(
+      children: [
             AbsorbPointer(
               absorbing: busy,
               child: ListView(
@@ -654,38 +653,39 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                       'Ocasión · clima · prendas disponibles',
                     ),
                     children: [
-                      OutlinedButton.icon(
-                        onPressed: () async {
-                          final chosen = await showDatePicker(
-                            context: context,
-                            initialDate: date,
-                            firstDate: DateUtils.dateOnly(DateTime.now()),
-                            lastDate: calendarDayOffset(DateTime.now(), 13),
-                          );
-                          if (chosen != null && mounted) {
-                            date = chosen;
-                            await generate();
-                          }
-                        },
-                        icon: const Icon(Icons.event),
-                        label: Text(
-                          MaterialLocalizations.of(context).formatFullDate(date),
-                        ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              MaterialLocalizations.of(context).formatFullDate(date),
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ),
+                          IconButton.filledTonal(
+                            tooltip: 'Cambiar fecha',
+                            onPressed: () async {
+                              final chosen = await showDatePicker(
+                                context: context,
+                                initialDate: date,
+                                firstDate: DateUtils.dateOnly(DateTime.now()),
+                                lastDate: calendarDayOffset(DateTime.now(), 13),
+                              );
+                              if (chosen != null && mounted) {
+                                date = chosen;
+                                await generate();
+                              }
+                            },
+                            icon: const Icon(Icons.event_outlined),
+                          ),
+                          IconButton.filledTonal(
+                            tooltip: 'Excluir prendas de este día (${profile.excludedOn(date).length})',
+                            onPressed: excludePieces,
+                            icon: const Icon(Icons.block_outlined),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        onPressed: excludePieces,
-                        icon: const Icon(Icons.block),
-                        label: Text(
-                          'Excluir prendas este día (${profile.excludedOn(date).length})',
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      choice('Ocasión', occasion, occasions, (v) {
-                        occasion = v;
-                        generate();
-                      }),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 4),
                       Container(
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
@@ -803,41 +803,25 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                                   style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                               ],
-                              const SizedBox(height: 4),
-                              Text(
-                                'Previsión de Open-Meteo. Tus fotos no se envían.',
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
                             ],
                           ],
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  TextButton.icon(
-                    onPressed: reviewGarments,
-                    icon: const Icon(Icons.checkroom),
-                    label: const Text('Revisar categorías y disponibilidad'),
-                  ),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      FilledButton.icon(
-                        onPressed: () {
-                          seed++;
-                          generate();
-                        },
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('Otras propuestas'),
-                      ),
-                      OutlinedButton.icon(
-                        onPressed: proposeWeek,
-                        icon: const Icon(Icons.calendar_month),
-                        label: const Text('Planificar 7 días'),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          onPressed: resetPreferences,
+                          icon: const Icon(Icons.restart_alt),
+                          label: const Text('Restablecer preferencias'),
+                        ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 12),
+                  FilledButton.icon(
+                    onPressed: proposeWeek,
+                    icon: const Icon(Icons.calendar_month),
+                    label: const Text('Planificar 7 días'),
                   ),
                   if (error.isNotEmpty)
                     Padding(
@@ -884,59 +868,45 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                                 items: s.items,
                                 aspectRatio: 1.0,
                               ),
-                              const SizedBox(height: 10),
-                              CategoryOutfitView(
-                                repo: widget.repo,
-                                garments: s.garments,
-                                compactImages: true,
-                                showNames: false,
-                              ),
                               const SizedBox(height: 12),
                               Wrap(
                                 spacing: 8,
                                 children: [
-                                  OutlinedButton.icon(
+                                  IconButton.filledTonal(
+                                    tooltip: 'Ajustar / fijar prendas',
                                     onPressed: () async {
                                       final result =
-                                          await Navigator.push<
-                                            OutfitSuggestion
-                                          >(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (_) => OutfitDraftScreen(
-                                                repo: widget.repo,
-                                                garments: garments,
-                                                usage: usage,
-                                                preferences: style,
-                                                suggestion: s,
-                                                date: date,
-                                                climate: climateFor(date),
-                                                occasion: occasion,
-                                                profile: profile,
-                                                rainy: rainyFor(date),
-                                                windy: windyFor(date),
-                                                feedback: feedback,
-                                                initiallyLocked: {
-                                                  if (widget.anchorId != null)
-                                                    widget.anchorId!,
-                                                },
-                                              ),
-                                            ),
-                                          );
+                                          await Navigator.push<OutfitSuggestion>(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => OutfitDraftScreen(
+                                            repo: widget.repo,
+                                            garments: garments,
+                                            usage: usage,
+                                            preferences: style,
+                                            suggestion: s,
+                                            date: date,
+                                            climate: climateFor(date),
+                                            occasion: occasion,
+                                            profile: profile,
+                                            rainy: rainyFor(date),
+                                            windy: windyFor(date),
+                                            feedback: feedback,
+                                            initiallyLocked: {
+                                              if (widget.anchorId != null)
+                                                widget.anchorId!,
+                                            },
+                                          ),
+                                        ),
+                                      );
                                       if (result != null && mounted) {
-                                        setState(
-                                          () =>
-                                              suggestions[suggestions.indexOf(
-                                                    s,
-                                                  )] =
-                                                  result,
-                                        );
+                                        final index = suggestions.indexOf(s);
+                                        if (index >= 0) {
+                                          setState(() => suggestions[index] = result);
+                                        }
                                       }
                                     },
                                     icon: const Icon(Icons.swap_horiz),
-                                    label: const Text(
-                                      'Ajustar / fijar prendas',
-                                    ),
                                   ),
                                   IconButton.filledTonal(
                                     tooltip: 'Me gusta',
@@ -951,15 +921,21 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                                 ],
                               ),
                               const SizedBox(height: 8),
-                              if (dateKey(date) == dateKey(DateTime.now()))
-                                OutlinedButton.icon(
-                                  onPressed: () => markUsed(s),
-                                  icon: const Icon(Icons.check_circle_outline),
-                                  label: const Text('Lo he usado hoy'),
-                                ),
-                              FilledButton(
-                                onPressed: () => saveSuggestion(s),
-                                child: const Text('Revisar y guardar outfit'),
+                              Wrap(
+                                spacing: 8,
+                                children: [
+                                  if (dateKey(date) == dateKey(DateTime.now()))
+                                    IconButton.filledTonal(
+                                      tooltip: 'Lo he usado hoy',
+                                      onPressed: () => markUsed(s),
+                                      icon: const Icon(Icons.check_circle_outline),
+                                    ),
+                                  IconButton.filled(
+                                    tooltip: 'Revisar y guardar outfit',
+                                    onPressed: () => saveSuggestion(s),
+                                    icon: const Icon(Icons.bookmark_add_outlined),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -977,7 +953,22 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                 ),
               ),
           ],
+        );
+    if (widget.embedded) return screenBody;
+    return PopScope(
+      canPop: !busy,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Ideas para vestirte'),
+          actions: [
+            IconButton(
+              tooltip: 'Otras propuestas',
+              icon: const Icon(Icons.refresh_rounded),
+              onPressed: another,
+            ),
+          ],
         ),
+        body: screenBody,
       ),
     );
   }
