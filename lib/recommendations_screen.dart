@@ -635,60 +635,6 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
               child: ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(22),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: .48),
-                      borderRadius: BorderRadius.circular(28),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surface.withValues(alpha: .8),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: Icon(
-                            Icons.auto_awesome_rounded,
-                            size: 28,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        Text(
-                          'Tu estilo, tu próxima idea',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            height: 1.12,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Combinaciones hechas con tu armario. Descubre una propuesta, ajústala a tu gusto y guarda la que te encaje.',
-                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.4),
-                        ),
-                        const SizedBox(height: 14),
-                        Row(
-                          children: [
-                            Icon(Icons.checkroom_outlined, size: 18, color: Theme.of(context).colorScheme.primary),
-                            const SizedBox(width: 7),
-                            Expanded(
-                              child: Text(
-                                'Colores · clima · ocasión · uso reciente',
-                                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                  color: Theme.of(context).colorScheme.primary,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
                   FilledButton.icon(
                     onPressed: manualPlan,
                     icon: const Icon(Icons.add),
@@ -705,7 +651,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                     leading: const Icon(Icons.tune_rounded),
                     title: const Text('Personaliza tu idea'),
                     subtitle: const Text(
-                      'Ocasión · estilo · clima · prendas disponibles',
+                      'Ocasión · clima · prendas disponibles',
                     ),
                     children: [
                       OutlinedButton.icon(
@@ -727,11 +673,6 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      choice('Estilo preferido', profile.style, outfitStyles, (v) {
-                        profile.style = v;
-                        generate();
-                      }),
-                      const SizedBox(height: 12),
                       OutlinedButton.icon(
                         onPressed: excludePieces,
                         icon: const Icon(Icons.block),
@@ -745,82 +686,135 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                         generate();
                       }),
                       const SizedBox(height: 16),
-                      SwitchListTile(
-                        contentPadding: EdgeInsets.zero,
-                        title: const Text('Usar el tiempo de una ciudad'),
-                        value: preferences.automatic,
-                        onChanged: (v) {
-                          if (v && preferences.city == null) {
-                            chooseCity();
-                            return;
-                          }
-                          preferences = ClimatePreferences(
-                            automatic: v,
-                            manual: preferences.manual,
-                            city: preferences.city,
-                          );
-                          generate();
-                        },
-                      ),
-                      if (!preferences.automatic) ...[
-                        SwitchListTile(
-                          title: const Text('Lluvia'),
-                          value: profile.rain,
-                          onChanged: (v) {
-                            profile.rain = v;
-                            generate();
-                          },
-                        ),
-                        SwitchListTile(
-                          title: const Text('Viento fuerte'),
-                          value: profile.wind,
-                          onChanged: (v) {
-                            profile.wind = v;
-                            generate();
-                          },
-                        ),
-                        choice(
-                          'Temperatura manual',
-                          preferences.manual.label,
-                          Climate.values.map((c) => c.label).toList(),
-                          (v) {
-                            preferences = ClimatePreferences(
-                              automatic: false,
-                              manual: Climate.values.firstWhere(
-                                (c) => c.label == v,
-                              ),
-                              city: preferences.city,
-                            );
-                            generate();
-                          },
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Frío: menos de 15 °C · Templado: 15–24 °C · Calor: 25 °C o más',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ],
-                      if (preferences.automatic) ...[
-                        OutlinedButton.icon(
-                          onPressed: chooseCity,
-                          icon: const Icon(Icons.location_city),
-                          label: Text(preferences.city?.name ?? 'Elegir ciudad'),
-                        ),
-                        if (day != null)
-                          Text(
-                            '${day.min.round()}–${day.max.round()} °C · ${day.climate.label}\nLluvia: ${day.rainProbability?.round().toString() ?? 'sin dato'} % · Viento: ${day.windSpeed?.round().toString() ?? 'sin dato'} km/h',
+                      Container(
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surfaceContainerLow,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outlineVariant,
                           ),
-                        const Text(
-                          'Previsión: Open-Meteo. Solo se consulta el tiempo; las fotos no se envían.',
-                          style: TextStyle(fontSize: 12),
                         ),
-                      ],
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.cloud_outlined,
+                                  color: Theme.of(context).colorScheme.primary,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Tiempo y clima',
+                                  style: Theme.of(context).textTheme.titleMedium,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            SegmentedButton<bool>(
+                              showSelectedIcon: false,
+                              segments: const [
+                                ButtonSegment<bool>(
+                                  value: true,
+                                  icon: Icon(Icons.location_city_outlined),
+                                  label: Text('Por ciudad'),
+                                ),
+                                ButtonSegment<bool>(
+                                  value: false,
+                                  icon: Icon(Icons.tune_rounded),
+                                  label: Text('Manual'),
+                                ),
+                              ],
+                              selected: {preferences.automatic},
+                              onSelectionChanged: (selection) {
+                                final automatic = selection.first;
+                                if (automatic && preferences.city == null) {
+                                  chooseCity();
+                                  return;
+                                }
+                                preferences = ClimatePreferences(
+                                  automatic: automatic,
+                                  manual: preferences.manual,
+                                  city: preferences.city,
+                                );
+                                generate();
+                              },
+                            ),
+                            if (!preferences.automatic) ...[
+                              const SizedBox(height: 12),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 8,
+                                children: [
+                                  FilterChip(
+                                    avatar: const Icon(Icons.water_drop_outlined, size: 18),
+                                    label: const Text('Lluvia'),
+                                    selected: profile.rain,
+                                    onSelected: (value) {
+                                      profile.rain = value;
+                                      generate();
+                                    },
+                                  ),
+                                  FilterChip(
+                                    avatar: const Icon(Icons.air_rounded, size: 18),
+                                    label: const Text('Viento fuerte'),
+                                    selected: profile.wind,
+                                    onSelected: (value) {
+                                      profile.wind = value;
+                                      generate();
+                                    },
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              choice(
+                                'Temperatura',
+                                preferences.manual.label,
+                                Climate.values.map((c) => c.label).toList(),
+                                (value) {
+                                  preferences = ClimatePreferences(
+                                    automatic: false,
+                                    manual: Climate.values.firstWhere(
+                                      (c) => c.label == value,
+                                    ),
+                                    city: preferences.city,
+                                  );
+                                  generate();
+                                },
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Frío: menos de 15 °C · Templado: 15–24 °C · Calor: 25 °C o más',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ],
+                            if (preferences.automatic) ...[
+                              const SizedBox(height: 12),
+                              OutlinedButton.icon(
+                                onPressed: chooseCity,
+                                icon: const Icon(Icons.location_city_outlined),
+                                label: Text(preferences.city?.name ?? 'Elegir ciudad'),
+                              ),
+                              if (day != null) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${day.min.round()}–${day.max.round()} °C · ${day.climate.label}  |  Lluvia ${day.rainProbability?.round().toString() ?? 'sin dato'} %  |  Viento ${day.windSpeed?.round().toString() ?? 'sin dato'} km/h',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ],
+                              const SizedBox(height: 4),
+                              Text(
+                                'Previsión de Open-Meteo. Tus fotos no se envían.',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Text(
-                    '${garments.length} prendas guardadas · ${garments.where((g) => g.available).length} disponibles',
-                  ),
                   TextButton.icon(
                     onPressed: reviewGarments,
                     icon: const Icon(Icons.checkroom),
@@ -897,14 +891,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                                 compactImages: true,
                               ),
                               const SizedBox(height: 12),
-                              Text(
-                                s.garments.map((g) => g.name).join(' + '),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Wrap(
+                              const SizedBox(height: 8),                              Wrap(
                                 spacing: 8,
                                 children: [
                                   OutlinedButton.icon(
@@ -950,25 +937,19 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                                       'Ajustar / fijar prendas',
                                     ),
                                   ),
-                                  TextButton.icon(
+                                  IconButton.filledTonal(
+                                    tooltip: 'Me gusta',
                                     onPressed: () => rate(s, true),
                                     icon: const Icon(Icons.thumb_up_outlined),
-                                    label: const Text('Me gusta'),
                                   ),
-                                  TextButton.icon(
+                                  IconButton.filledTonal(
+                                    tooltip: 'No me pondría esto',
                                     onPressed: () => rate(s, false),
                                     icon: const Icon(Icons.thumb_down_outlined),
-                                    label: const Text('No me pondría esto'),
                                   ),
                                 ],
                               ),
-                              for (final reason in s.reasons)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 4),
-                                  child: Text('• $reason'),
-                                ),
-                              const SizedBox(height: 8),
-                              if (dateKey(date) == dateKey(DateTime.now()))
+                              const SizedBox(height: 8),                              if (dateKey(date) == dateKey(DateTime.now()))
                                 OutlinedButton.icon(
                                   onPressed: () => markUsed(s),
                                   icon: const Icon(Icons.check_circle_outline),
