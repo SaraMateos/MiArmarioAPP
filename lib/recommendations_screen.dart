@@ -894,7 +894,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                               CategoryOutfitView(
                                 repo: widget.repo,
                                 garments: s.garments,
-                                compact: true,
+                                compactImages: true,
                               ),
                               const SizedBox(height: 12),
                               Text(
