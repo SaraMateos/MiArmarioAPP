@@ -16,6 +16,16 @@ class CategoryOutfitView extends StatelessWidget {
     this.repetitions = const {},
     this.compact = false,
   });
+  String _presentationRole(Garment garment) {
+    final role = roleOf(garment);
+    if (role == 'Parte superior') {
+      return 'Prenda superior · ${layerOf(garment)}';
+    }
+    if (role == 'Abrigos') return 'Abrigo · ${layerOf(garment)}';
+    if (role == 'Parte inferior') return 'Prenda inferior';
+    return role;
+  }
+
   @override
   Widget build(BuildContext context) => LayoutBuilder(
     builder: (context, bounds) {
@@ -32,11 +42,7 @@ class CategoryOutfitView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    ['Parte superior', 'Abrigos'].contains(roleOf(g))
-                        ? '${roleOf(g) == 'Parte superior' ? 'Prenda superior' : 'Abrigo'} · ${layerOf(g)}'
-                        : roleOf(g) == 'Parte inferior'
-                        ? 'Prenda inferior'
-                        : roleOf(g),
+                    _presentationRole(g),
                     style: Theme.of(context).textTheme.labelMedium,
                   ),
                   const SizedBox(height: 4),
