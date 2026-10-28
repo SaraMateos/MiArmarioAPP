@@ -697,6 +697,17 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
+                  ExpansionTile(
+                    key: const PageStorageKey<String>('ideas-preferences'),
+                    initiallyExpanded: false,
+                    tilePadding: const EdgeInsets.symmetric(horizontal: 4),
+                    childrenPadding: const EdgeInsets.fromLTRB(4, 0, 4, 12),
+                    leading: const Icon(Icons.tune_rounded),
+                    title: const Text('Personaliza tu idea'),
+                    subtitle: const Text(
+                      'Ocasión · estilo · clima · prendas disponibles',
+                    ),
+                    children: [
                   OutlinedButton.icon(
                     onPressed: () async {
                       final chosen = await showDatePicker(
@@ -803,6 +814,9 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                       style: TextStyle(fontSize: 12),
                     ),
                   ],
+                  ],
+                  ),
+                  const SizedBox(height: 16),
                   const SizedBox(height: 16),
                   Text(
                     '${garments.length} prendas guardadas · ${garments.where((g) => g.available).length} disponibles',
