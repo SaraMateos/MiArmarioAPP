@@ -8,7 +8,7 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 void main() {
   test(
-    'Actualización de SQLite 1 a 4 preserva IDs, relaciones y uso anterior',
+    'Actualización de SQLite 1 a 7 preserva IDs, relaciones y uso anterior',
     () async {
       sqfliteFfiInit();
       databaseFactory = databaseFactoryFfi;
@@ -66,7 +66,9 @@ void main() {
       final repo = await WardrobeRepository.open(root);
       try {
         expect((await repo.garments()).single.colorTags, ['Azul']);
-        expect((await repo.outfits()).single.items.single.x, .3);
+        final item = (await repo.outfits()).single.items.single;
+        expect((item.x, item.y, item.scale), (.3, .4, .8));
+        expect(item.mannequinX, OutfitItem.unsetMannequinX);
         expect((await repo.usageStats())['g1']?.count, 1);
         expect(
           jsonDecode(
@@ -74,11 +76,65 @@ void main() {
           ),
           ['Azul'],
         );
-        expect(await repo.db.getVersion(), 5);
+        expect(await repo.db.getVersion(), 7);
       } finally {
         await repo.close();
         await root.delete(recursive: true);
       }
     },
   );
+  test('Migración de SQLite 6 conserva los maniquíes editados', () async {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+    final root = await Directory.systemTemp.createTemp('wardrobe_schema6_');
+    var repo = await WardrobeRepository.open(root);
+    final photo = await repo.importPhoto('test/fixtures/camiseta.png');
+    await repo.saveGarment(
+      Garment(
+        id: 'g1',
+        name: 'Camiseta',
+        category: 'Parte superior',
+        photo: photo,
+      ),
+    );
+    await repo.saveGarment(
+      Garment(
+        id: 'g2',
+        name: 'Segunda camiseta',
+        category: 'Parte superior',
+        photo: photo,
+      ),
+    );
+    final defaultItem = OutfitItem(garmentId: 'g1', mannequinX: .3);
+    await repo.saveOutfit(
+      Outfit(id: 'legacy', name: 'Anterior', items: [defaultItem]),
+    );
+    await repo.saveOutfit(
+      Outfit(
+        id: 'edited',
+        name: 'Editado',
+        items: [
+          defaultItem,
+          OutfitItem(garmentId: 'g2', mannequinX: .45, mannequinY: .65),
+        ],
+      ),
+    );
+    await repo.db.setVersion(6);
+    await repo.close();
+    repo = await WardrobeRepository.open(root);
+    try {
+      final outfits = {
+        for (final outfit in await repo.outfits()) outfit.id: outfit,
+      };
+      expect(
+        outfits['legacy']!.items.single.mannequinX,
+        OutfitItem.unsetMannequinX,
+      );
+      expect(outfits['edited']!.items.map((i) => i.mannequinX), [.3, .45]);
+      expect(await repo.db.getVersion(), 7);
+    } finally {
+      await repo.close();
+      await root.delete(recursive: true);
+    }
+  });
 }

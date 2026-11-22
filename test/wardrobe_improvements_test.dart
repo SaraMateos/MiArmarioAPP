@@ -55,10 +55,13 @@ void main() {
       await repo.db.execute('ALTER TABLE garments DROP COLUMN subtype');
       await repo.db.execute('ALTER TABLE garments DROP COLUMN status');
       await repo.db.execute('ALTER TABLE garments DROP COLUMN source_photo');
+      for (final column in ['mannequin_x', 'mannequin_y', 'mannequin_scale']) {
+        await repo.db.execute('ALTER TABLE outfit_items DROP COLUMN $column');
+      }
       await repo.db.setVersion(2);
       await repo.close();
       repo = await WardrobeRepository.open(root);
-      expect(await repo.db.getVersion(), 5);
+      expect(await repo.db.getVersion(), 7);
       final g = (await repo.garments()).single;
       expect(g.id, 'old');
       expect(g.status, 'Disponible');

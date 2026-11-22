@@ -83,7 +83,7 @@ void main() {
         await tester.pumpAndSettle();
       }
 
-      await seeAndTap('Colores, temporadas y más datos');
+      await seeAndTap('Colores, temporadas y ocasiones');
       await seeAndTap('Rojo');
       await seeAndTap('Primavera');
       await seeAndTap('Otoño');
@@ -109,4 +109,59 @@ void main() {
       await tester.pumpWidget(const SizedBox());
     },
   );
+  testWidgets('Guardar lote reintenta solo las fotos que dieron error', (
+    tester,
+  ) async {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+    late Directory root;
+    late WardrobeRepository repo;
+    late String missing;
+    await tester.runAsync(() async {
+      root = await Directory.systemTemp.createTemp('wardrobe_batch_retry_');
+      repo = await WardrobeRepository.open(root);
+      missing = '${root.path}/missing.png';
+    });
+    addTearDown(() async {
+      await repo.close();
+      await root.delete(recursive: true);
+    });
+    const channel = MethodChannel('es.personal.mi_armario/local_photo');
+    final messenger =
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+    messenger.setMockMethodCallHandler(
+      channel,
+      (call) async => {
+        'category': 'Parte superior',
+        'name': 'Camiseta',
+        'confidence': .4,
+      },
+    );
+    addTearDown(() => messenger.setMockMethodCallHandler(channel, null));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: BatchImportScreen(
+          repo: repo,
+          files: [XFile('test/fixtures/camiseta.png'), XFile(missing)],
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Guardar lote (2)'));
+    await waitForWidget(tester, find.text('1 guardadas de 2'));
+    await tester.runAsync(() async {
+      expect((await repo.garments()).single.needsTypeReview, isTrue);
+      await File('test/fixtures/pantalon.png').copy(missing);
+    });
+    await tester.tap(find.text('Guardar lote (1)'));
+    await waitForWidget(tester, find.text('2 guardadas de 2'));
+    await tester.runAsync(() async {
+      final garments = await repo.garments();
+      expect(garments, hasLength(2));
+      expect(garments.map((g) => g.photo).toSet(), hasLength(2));
+      expect(garments.every((g) => g.needsTypeReview), isTrue);
+    });
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
 }

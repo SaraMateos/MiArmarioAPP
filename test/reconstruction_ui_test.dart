@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:mi_armario/auto_framed_photo.dart';
 import 'package:mi_armario/backup_screen.dart';
 
 import 'dart:async';
@@ -173,6 +174,7 @@ void main() {
     await launch(t, DailyToolsScreen(repo: repo, laundry: true));
     await waitForWidget(t, find.text('Pantalón azul'));
     await t.tap(find.byType(Checkbox).first);
+    await t.pumpAndSettle();
     await capture(t, 'lavado');
     await t.tap(find.text('Ya están limpias (1)'));
     await waitForWidget(t, find.text('No hay prendas pendientes.'));
@@ -248,36 +250,39 @@ void main() {
       await t.pumpWidget(const SizedBox());
     },
   );
-  testWidgets(
-    'Inicio en Armario muestra fotos con filtros de categoría',
-    (t) async {
-      await prepare(t);
-      await t.runAsync(() async {
-        await repo.saveGarment(
-          Garment(
-            id: 'coat',
-            name: 'Abrigo negro',
-            category: 'Abrigos',
-            subtype: 'Abrigo',
-            photo: garment.photo,
-          ),
-        );
-      });
-      await launch(t, WardrobeHome(repo: repo));
-      await waitForWidget(t, find.text('Tu ropa, a mano'));
-      await waitForWidget(t, find.text('Tu ropa, a mano'));
-      expect(find.text('Pantalón azul'), findsNothing);
-      expect(find.text('Abrigo negro'), findsNothing);
-      expect(find.bySemanticsLabel('Abrigo negro'), findsOneWidget);
-      await t.tap(find.text('Parte superior'));
-      await t.pumpAndSettle();
-      expect(find.bySemanticsLabel('Abrigo negro'), findsOneWidget);
-      expect(find.bySemanticsLabel('Pantalón azul'), findsNothing);
-      await capture(t, 'armario_solo_fotos');
-      expect(t.takeException(), isNull);
-      await t.pumpWidget(const SizedBox());
-    },
-  );
+  testWidgets('Inicio en Armario muestra fotos con filtros de categoría', (
+    t,
+  ) async {
+    await prepare(t);
+    await t.runAsync(() async {
+      await repo.saveGarment(
+        Garment(
+          id: 'coat',
+          name: 'Abrigo negro',
+          category: 'Abrigos',
+          subtype: 'Abrigo',
+          photo: garment.photo,
+        ),
+      );
+    });
+    await launch(t, WardrobeHome(repo: repo));
+    await waitForWidget(t, find.byTooltip('Acciones de Abrigo negro'));
+    await t.tap(find.byTooltip('Acciones de Abrigo negro'));
+    await t.pumpAndSettle();
+    expect(find.text('Sugerir outfit con esta prenda'), findsOneWidget);
+    await t.binding.handlePopRoute();
+    await t.pumpAndSettle();
+    expect(find.text('Pantalón azul'), findsNothing);
+    expect(find.text('Abrigo negro'), findsNothing);
+    expect(find.bySemanticsLabel('Abrigo negro'), findsOneWidget);
+    await t.tap(find.text('Parte superior'));
+    await t.pumpAndSettle();
+    expect(find.bySemanticsLabel('Abrigo negro'), findsOneWidget);
+    expect(find.bySemanticsLabel('Pantalón azul'), findsNothing);
+    await capture(t, 'armario_solo_fotos');
+    expect(t.takeException(), isNull);
+    await t.pumpWidget(const SizedBox());
+  });
   testWidgets(
     'Copias guarda y muestra el cambio de recordatorio en su propia pantalla',
     (t) async {
@@ -320,7 +325,7 @@ void main() {
       await prepare(t);
       await launch(t, GarmentEditor(repo: repo, garment: garment));
       await t.pumpAndSettle();
-      await t.tap(find.byType(Image).first);
+      await t.tap(find.byType(AutoFramedPhoto).first);
       await t.pumpAndSettle();
       expect(find.text('Revisar foto'), findsOneWidget);
       expect(
@@ -329,7 +334,7 @@ void main() {
       );
       await t.binding.handlePopRoute();
       await t.pumpAndSettle();
-      final section = find.text('Colores, temporadas y más datos');
+      final section = find.text('Colores, temporadas y ocasiones');
       await t.scrollUntilVisible(
         section,
         150,

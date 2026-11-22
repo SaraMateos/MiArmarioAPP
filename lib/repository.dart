@@ -26,7 +26,7 @@ class WardrobeRepository {
     await Directory(p.join(root.path, 'photos')).create(recursive: true);
     final db = await openDatabase(
       p.join(root.path, 'wardrobe.db'),
-      version: 6,
+      version: 7,
       onOpen: (db) async {
         await db.execute(
           "CREATE TABLE IF NOT EXISTS undo_actions(id INTEGER PRIMARY KEY AUTOINCREMENT, label TEXT NOT NULL, data TEXT NOT NULL)",
@@ -43,7 +43,7 @@ class WardrobeRepository {
           'CREATE TABLE outfits(id TEXT PRIMARY KEY, name TEXT NOT NULL, occasion TEXT NOT NULL, notes TEXT NOT NULL, favorite INTEGER NOT NULL CHECK(favorite IN (0,1)))',
         );
         await db.execute(
-          'CREATE TABLE outfit_items(outfit_id TEXT NOT NULL REFERENCES outfits(id) ON DELETE CASCADE, garment_id TEXT NOT NULL REFERENCES garments(id) ON DELETE RESTRICT, position INTEGER NOT NULL, x REAL NOT NULL, y REAL NOT NULL, scale REAL NOT NULL, mannequin_x REAL NOT NULL DEFAULT 0.3, mannequin_y REAL NOT NULL DEFAULT 0.2, mannequin_scale REAL NOT NULL DEFAULT 1.0, PRIMARY KEY(outfit_id, garment_id))',
+          'CREATE TABLE outfit_items(outfit_id TEXT NOT NULL REFERENCES outfits(id) ON DELETE CASCADE, garment_id TEXT NOT NULL REFERENCES garments(id) ON DELETE RESTRICT, position INTEGER NOT NULL, x REAL NOT NULL, y REAL NOT NULL, scale REAL NOT NULL, mannequin_x REAL NOT NULL DEFAULT -1.0, mannequin_y REAL NOT NULL DEFAULT 0.2, mannequin_scale REAL NOT NULL DEFAULT 1.0, PRIMARY KEY(outfit_id, garment_id))',
         );
         await db.execute(
           'CREATE TABLE plans(date TEXT PRIMARY KEY, outfit_id TEXT NOT NULL REFERENCES outfits(id) ON DELETE CASCADE, worn INTEGER NOT NULL CHECK(worn IN (0,1)))',
@@ -96,9 +96,25 @@ class WardrobeRepository {
           );
         }
         if (oldVersion < 6) {
-          await db.execute('ALTER TABLE outfit_items ADD COLUMN mannequin_x REAL NOT NULL DEFAULT 0.3');
-          await db.execute('ALTER TABLE outfit_items ADD COLUMN mannequin_y REAL NOT NULL DEFAULT 0.2');
-          await db.execute('ALTER TABLE outfit_items ADD COLUMN mannequin_scale REAL NOT NULL DEFAULT 1.0');
+          await db.execute(
+            'ALTER TABLE outfit_items ADD COLUMN mannequin_x REAL NOT NULL DEFAULT -1.0',
+          );
+          await db.execute(
+            'ALTER TABLE outfit_items ADD COLUMN mannequin_y REAL NOT NULL DEFAULT 0.2',
+          );
+          await db.execute(
+            'ALTER TABLE outfit_items ADD COLUMN mannequin_scale REAL NOT NULL DEFAULT 1.0',
+          );
+        }
+        if (oldVersion == 6) {
+          // Only reset outfits whose entire mannequin still has the v6 defaults.
+          await db.execute("""
+            UPDATE outfit_items SET mannequin_x = -1.0
+            WHERE outfit_id NOT IN (
+              SELECT outfit_id FROM outfit_items
+              WHERE mannequin_x != 0.3 OR mannequin_y != 0.2 OR mannequin_scale != 1.0
+            )
+          """);
         }
         if (oldVersion < 5) {
           await db.execute(

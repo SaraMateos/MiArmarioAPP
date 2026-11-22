@@ -394,7 +394,10 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     }
   }
 
-  Future<void> reviewGarments() async {
+  Future<void> reviewGarments({bool pendingOnly = false}) async {
+    final candidates = pendingOnly
+        ? garments.where((g) => g.needsTypeReview).toList()
+        : garments;
     await showModalBottomSheet<void>(
       context: context,
       showDragHandle: true,
@@ -404,13 +407,15 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
           height: MediaQuery.sizeOf(sheetContext).height * .65,
           child: ListView(
             children: [
-              const ListTile(
-                title: Text('Revisar categorías y disponibilidad'),
-                subtitle: Text(
-                  'Una camiseta y un pantalón deben tener categorías distintas. Cada foto del lote debe guardarse.',
+              ListTile(
+                title: Text(
+                  pendingOnly
+                      ? 'Prendas por revisar'
+                      : 'Revisar categorías y disponibilidad',
                 ),
+                subtitle: const Text('Toca una prenda para editar su ficha.'),
               ),
-              for (final g in garments)
+              for (final g in candidates)
                 ListTile(
                   leading: SizedBox(
                     width: 50,
@@ -439,6 +444,76 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
     garments = await widget.repo.garments();
     usage = await widget.repo.usageStats();
     await generate();
+  }
+
+  Future<void> changeOccasion() async {
+    final next = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            const ListTile(title: Text('Elegir ocasión')),
+            for (final value in occasions)
+              ListTile(
+                title: Text(value),
+                selected: occasion == value,
+                onTap: () => Navigator.pop(sheetContext, value),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (next == null || !mounted) return;
+    occasion = next;
+    await generate();
+  }
+
+  Widget suggestionHelp() {
+    final exclusions = profile.excludedOn(date);
+    final pending = garments.where((g) => g.needsTypeReview).length;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            RecommendationService.noSuggestionReason(
+              garments,
+              anchorId: widget.anchorId,
+              profile: profile,
+              date: date,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            children: [
+              if (pending > 0)
+                OutlinedButton(
+                  onPressed: () => reviewGarments(pendingOnly: true),
+                  child: Text(
+                    pending == 1
+                        ? 'Revisar 1 prenda'
+                        : 'Revisar $pending prendas',
+                  ),
+                ),
+              if (exclusions.isNotEmpty)
+                OutlinedButton(
+                  onPressed: excludePieces,
+                  child: const Text('Revisar exclusiones'),
+                ),
+              if (garments.any((g) => g.available && !g.needsTypeReview))
+                OutlinedButton(
+                  onPressed: changeOccasion,
+                  child: const Text('Cambiar ocasión'),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> manualPlan() async {
@@ -796,17 +871,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                       ),
                     ),
                   if (!busy && suggestions.isEmpty && error.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 24),
-                      child: Text(
-                        RecommendationService.noSuggestionReason(
-                          garments,
-                          anchorId: widget.anchorId,
-                          profile: profile,
-                          date: date,
-                        ),
-                      ),
-                    ),
+                    suggestionHelp(),
                   const SizedBox(height: 20),
                   for (final s in suggestions)
                     Padding(
@@ -817,6 +882,16 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              if (s.reasons.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: Text(
+                                    s.reasons.take(2).join(' · '),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleSmall,
+                                  ),
+                                ),
                               OutfitBoard(
                                 repo: widget.repo,
                                 garments: s.garments,
@@ -867,13 +942,12 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                                             ),
                                           );
                                       if (result != null && mounted) {
-                                        setState(
-                                          () =>
-                                              suggestions[suggestions.indexOf(
-                                                    s,
-                                                  )] =
-                                                  result,
-                                        );
+                                        final index = suggestions.indexOf(s);
+                                        if (index >= 0) {
+                                          setState(
+                                            () => suggestions[index] = result,
+                                          );
+                                        }
                                       }
                                     },
                                     icon: const Icon(Icons.swap_horiz),
@@ -893,7 +967,7 @@ class _RecommendationsScreenState extends State<RecommendationsScreen> {
                                   ),
                                 ],
                               ),
-                              for (final reason in s.reasons)
+                              for (final reason in s.reasons.skip(2))
                                 Padding(
                                   padding: const EdgeInsets.only(bottom: 4),
                                   child: Text('• $reason'),

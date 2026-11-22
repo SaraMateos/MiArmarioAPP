@@ -6,6 +6,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mi_armario/auto_framed_photo.dart';
 import 'package:mi_armario/home.dart';
 import 'package:mi_armario/models.dart';
 import 'package:mi_armario/repository.dart';
@@ -100,11 +101,6 @@ void main() {
         ),
       ),
     );
-    await waitForWidget(
-      tester,
-      find.text('Todavía no hay outfit planificado para hoy.'),
-    );
-    await tester.tap(find.text('Armario'));
     await waitForWidget(tester, find.bySemanticsLabel('Camiseta blanca'));
     Future<void> capture(String name) async {
       for (var frame = 0; frame < 5; frame++) {
@@ -146,17 +142,39 @@ void main() {
     await tester.tap(find.text('Un día tranquilo'));
     await tester.pumpAndSettle();
     await capture('editor');
-    await tester.tap(find.byType(Photo).first);
-    await tester.drag(find.byType(Photo).first, const Offset(80, 45));
+    final piece = find
+        .descendant(
+          of: find.byType(OutfitBoard),
+          matching: find.byType(AutoFramedPhoto),
+        )
+        .first;
+    // The other layers cover the centre of this piece.
+    final exposedCorner = tester.getTopLeft(piece) + const Offset(20, 20);
+    await tester.tapAt(exposedCorner);
     await tester.pumpAndSettle();
+    final board = find.byType(OutfitBoard);
+    expect(tester.widget<OutfitBoard>(board).selected, 0);
+    final gesture = await tester.startGesture(exposedCorner);
+    await gesture.moveBy(const Offset(50, 0));
+    await tester.pump();
+    await gesture.moveBy(const Offset(30, 0));
+    await tester.pump();
+    await gesture.moveBy(const Offset(20, 0));
+    await tester.pump();
+    await gesture.up();
+    await tester.pumpAndSettle();
+    expect(tester.widget<OutfitBoard>(board).items.first.x, greaterThan(.08));
     expect(find.byType(Slider), findsOneWidget);
-    final text = find.byType(TextFormField).first;
+    final name = find.widgetWithText(
+      TextFormField,
+      'Nombre del outfit (opcional)',
+    );
     await tester.scrollUntilVisible(
-      find.text('Nombre del outfit'),
+      name,
       150,
       scrollable: find.byType(Scrollable).first,
     );
-    await tester.enterText(text, 'Outfit editado');
+    await tester.enterText(name, 'Outfit editado');
     await tester.scrollUntilVisible(
       find.text('Guardar outfit'),
       250,

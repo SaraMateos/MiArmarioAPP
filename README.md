@@ -1,4 +1,4 @@
-# Mi Armario 1.7.6 — encuadre y editor de prendas
+# Mi Armario 1.7.8
 
 Aplicación Android en español para organizar prendas, componer outfits y planificar su uso. Los datos y fotos se guardan en SQLite y en la carpeta privada del móvil. El análisis de imágenes se realiza localmente; solo la consulta opcional del tiempo necesita Internet.
 
@@ -6,14 +6,15 @@ Esta revisión parte del proyecto recuperado de la **1.4.0**. Reconstruye las oc
 
 ## Uso
 
-La app abre en **Armario**. Barra inferior: **Armario, Outfits, Ideas, Hoy, Calendario**. Las tarjetas muestran solo la imagen, sin nombre ni detalles visibles, con encuadre automático para fondos simples: toca para revisar y mantén pulsada para disponibilidad, favoritos y otras acciones. «Parte superior» incluye también abrigos, chaquetas, americanas y chalecos, conservando su función de capa.
+La app abre en **Armario**. Barra inferior: **Armario, Outfits, Ideas, Hoy, Calendario**. Las tarjetas muestran la foto con encuadre automático para fondos simples. Toca la foto para editar. El botón ⋯ y la pulsación larga abren disponibilidad, favoritas y otras acciones. «Parte superior» incluye también abrigos, chaquetas, americanas y chalecos, conservando su función de capa.
 
 - **Hoy:** si no hay outfit asignado, permite elegir uno guardado o abrir Ideas para obtener propuestas; si está asignado, muestra el conjunto, permite cambiarlo y registrar el uso (con opción de lavado). La meteorología permanece en Ideas.
 - **Armario:** alta y edición con foto, nombre y categoría/tipo; los campos opcionales se separan en bloques de colores/temporadas/ocasiones, uso/estilo, características avanzadas (capas/lluvia/viento), talla/marca/tejido/lavado y notas/archivo. Cámara, galería, detección, recorte, aislamiento y pincel conservan botones visibles. El nombre sugerido es editable.
-- **Búsqueda:** combina palabras de nombre, notas, tipo, categoría, marca, talla y tejido. No distingue mayúsculas ni acentos en vocales. Los filtros siguen combinándose.
+- **Búsqueda:** combina palabras de nombre, notas, tipo, categoría, marca, talla y tejido. No distingue mayúsculas ni acentos en vocales. Los filtros se combinan. Los filtros adicionales y el orden activo se muestran debajo del buscador y se pueden quitar por separado.
+- **Alta por lotes:** selecciona hasta 30 fotos. Puedes analizarlas juntas, confirmar el tipo de cada una y aplicar una temporada y una ocasión comunes. «Guardar lote» añade todas las seleccionadas. Las detecciones dudosas se guardan como «Por revisar» y puedes reintentar las fotos que fallen. Para ajustar todos los datos o revisar posibles duplicados, abre la ficha completa. Las prendas ya guardadas se conservan al salir.
 - **Detección:** propone tipos y colores; las sugerencias débiles o contradictorias llevan «Por revisar». Ofrece tipos alternativos cuando el modelo los devuelve. Confirma o corrige el tipo; no garantiza reconocer pantalones ni otras prendas correctamente.
-- **Outfits:** disposición inicial por zonas aproximadas del cuerpo, botón «Ordenar como en un maniquí», silueta de referencia, arrastrar, superponer, escalar y ordenar prendas, guardar fotos de referencia y exportar PNG. Las composiciones guardadas se pueden ampliar a pantalla completa y explorar con zoom.
-- **Ideas:** portada más sencilla para entrar al generador; colores, clima manual/por ciudad, estilos, capas, uso reciente, exclusiones por día y conjuntos vinculados. Ajustar permite sustituir por frío, otro color o menor formalidad. Filtra alternativas que rompan capas, ocasión o vínculos. Planificación semanal editable con fotos.
+- **Outfits:** disposición inicial por zonas aproximadas del cuerpo, modo Maniquí con colocación inicial por tipo, arrastre, superposición, escala y orden de prendas, guardar fotos de referencia y exportar PNG. Libre y Maniquí conservan posiciones y tamaños independientes, con un orden de capas compartido. Puedes poner un nombre al outfit o usar el generado. Al abrir outfits anteriores sin posición asignada para el maniquí, la app coloca las prendas por tipo. Las composiciones guardadas se pueden ampliar a pantalla completa y explorar con zoom.
+- **Ideas:** portada más sencilla para entrar al generador; colores, clima manual/por ciudad, estilos, capas, uso reciente, exclusiones por día y conjuntos vinculados. Ajustar permite sustituir por frío, otro color o menor formalidad. Filtra alternativas que rompan capas, ocasión o vínculos. Planificación semanal editable con fotos. Las propuestas destacan sus motivos principales y, cuando faltan opciones, ofrecen accesos para confirmar tipos, revisar exclusiones o cambiar de ocasión.
 - **Calendario:** un outfit por día; marca días planificados y usados. El historial guarda los identificadores de las prendas realmente usadas aunque luego se cambie el outfit.
 - **Más herramientas:** selector con iconos y accesos a vínculos y utilidades; vinculaciones con miniaturas, compras, historial con fotos desplegables, archivo, edición por lotes, prendas olvidadas, duplicados, maletas, revisión de fichas y lavado por selección.
 - **Deshacer:** últimas diez acciones de calendario, planificación semanal o cambios por lote. Una edición posterior de los datos afectados impide la reversión. Al deshacer una semana se conservan los outfits creados y se retiran sus asignaciones. No deshace borrados, cambios de fotos ni restauraciones.
@@ -25,7 +26,7 @@ No hay tareas en segundo plano ni notificaciones programadas del sistema. La apl
 
 Antes de instalar un APK nuevo, exporta una copia desde tu aplicación actual. No desinstales ni borres datos. La configuración conserva `es.personal.mi_armario.local`; debe firmarse con la clave privada externa recuperada, cuyo certificado coincide con el APK 1.6.0 comprobado. No se incluyen claves privadas en este proyecto.
 
-Las copias antiguas admitidas por la base (formatos 1 a 5) siguen aceptándose; se reconoce también el indicador de revisión `type_review` encontrado en la 1.6. Las copias nuevas pueden contener campos que una app antigua no admita. La actualización física y la importación de una copia real del usuario deben verificarse en el móvil.
+La restauración lee los formatos 1 a 6, incluidos los ZIP de la 1.7.7 que contienen los datos del maniquí con el identificador del formato 5. Las copias nuevas usan el formato 6 y guardan ambas composiciones. Una app antigua puede rechazar ese formato. Se conserva el indicador de revisión `type_review` de la 1.6. La actualización física y la importación de una copia real del usuario deben verificarse en el móvil.
 
 ## Desarrollo y compilación
 
@@ -36,7 +37,7 @@ $env:ARMARIO_SIGNING_KEY = 'RUTA_LOCAL_A_LA_CLAVE_PRIVADA'
 .\COMPILAR_APK.ps1
 ```
 
-El script obtiene dependencias, ejecuta análisis y pruebas, y compila ARM64. APK: `build/app/outputs/flutter-apk/app-release.apk`. Se detiene si falta la clave o falla una comprobación. Para desarrollo: `flutter pub get`, `flutter run -d ID_DEL_MOVIL`.
+El script obtiene dependencias, ejecuta análisis y pruebas, y compila ARM64. APK: `build/app/outputs/flutter-apk/app-release.apk`. GitHub Actions ejecuta análisis y pruebas de Flutter al abrir o actualizar un pull request y al subir cambios a `main`. Se detiene si falta la clave o falla una comprobación. Para desarrollo: `flutter pub get`, `flutter run -d ID_DEL_MOVIL`.
 
 ## Diagnóstico
 
@@ -48,7 +49,9 @@ Consulta [DOCUMENTACION_TECNICA.md](DOCUMENTACION_TECNICA.md) y [VALIDACION.md](
 
 La vista de composición ajusta el encuadre al conjunto de prendas para aprovechar el lienzo (hasta 2,2×) y ofrece zoom a pantalla completa. El editor conserva las coordenadas y escalas guardadas. Las detecciones pendientes de confirmar se excluyen de propuestas automáticas, con explicación en Ideas.
 
-## Cambios en 1.7.3
+## Historial de interfaz
+
+### Cambios en 1.7.3
 
 Esta entrega modifica la navegación, el resumen de Hoy, la presentación del acceso a Ideas, el selector de Más herramientas, el mosaico de Armario y el lienzo del editor de outfits. No modifica el esquema SQLite ni elimina información ya guardada. El editor de prendas mejora la jerarquía visual de los bloques, conservando campos y detección. La silueta es una referencia 2D y no un avatar 3D ni un ajuste automático de las imágenes.
 
@@ -73,5 +76,5 @@ El Armario muestra las fotografías completas y centradas sin textos introductor
 ## Outfits (1.7.7)
 - El selector de prendas utiliza búsqueda, filtros por categoría y una cuadrícula fotográfica de dos columnas.
 - La composición Libre permite arrastrar con un dedo; el tamaño se controla mediante el deslizador y el borrado se hace con el icono de papelera.
-- Maniquí mantiene una silueta de referencia, coloca las prendas inicialmente por tipo y permite ajustes manuales. «Recolocar sobre el maniquí» reinicia esa distribución.
+- Maniquí coloca las prendas inicialmente por tipo y permite ajustes manuales. «Recolocar sobre el maniquí» reinicia esa distribución.
 - Ambas vistas guardan por separado posición y tamaño en SQLite.

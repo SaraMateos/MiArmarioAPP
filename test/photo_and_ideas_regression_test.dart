@@ -24,7 +24,7 @@ void main() {
         );
     expect(
       RecommendationService.noSuggestionReason([]),
-      contains('Guardar prenda'),
+      contains('importa un lote desde Armario'),
     );
     expect(
       RecommendationService.noSuggestionReason([piece('g', 'Parte superior')]),

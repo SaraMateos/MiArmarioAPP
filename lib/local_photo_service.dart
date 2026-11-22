@@ -1,5 +1,7 @@
 import 'package:flutter/services.dart';
 
+import 'models.dart';
+
 class PhotoAnalysis {
   final String? category, suggestedName, warning;
   final List<String> colors, alternatives;
@@ -12,6 +14,10 @@ class PhotoAnalysis {
     this.confidence = 0,
     this.alternatives = const [],
   });
+  String get suggestedType => inferGarmentType(suggestedName ?? '');
+  bool get needsTypeReview =>
+      suggestedType.isEmpty || confidence < .65 || warning != null;
+
   factory PhotoAnalysis.fromMap(Map<Object?, Object?> m) => PhotoAnalysis(
     category: m['category'] as String?,
     warning: m['warning'] as String?,

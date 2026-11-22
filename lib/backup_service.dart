@@ -12,6 +12,7 @@ import 'wardrobe_tools.dart';
 class BackupService {
   final WardrobeRepository repo;
   BackupService(this.repo);
+  static const _formatVersion = 6;
   static const maxZipBytes = 250 * 1024 * 1024;
   static const maxExpandedBytes = 500 * 1024 * 1024;
   Future<Uint8List> export() async {
@@ -22,7 +23,11 @@ class BackupService {
       );
     }
     final manifest = utf8.encode(
-      jsonEncode({'format': 'mi_armario', 'version': 5, 'data': data}),
+      jsonEncode({
+        'format': 'mi_armario',
+        'version': _formatVersion,
+        'data': data,
+      }),
     );
     if (manifest.length > 8 * 1024 * 1024) {
       throw const FormatException(
@@ -164,7 +169,8 @@ class BackupService {
         throw const FormatException('Los datos de la copia no son válidos.');
     if (decoded is! Map ||
         decoded['format'] != 'mi_armario' ||
-        ![1, 2, 3, 4, 5].contains(decoded['version']) ||
+        decoded['version'] is! int ||
+        ![1, 2, 3, 4, 5, _formatVersion].contains(decoded['version']) ||
         decoded['data'] is! Map) {
       invalid();
     }
@@ -208,6 +214,7 @@ class BackupService {
       'garment_wears': ['date', 'garment_id'],
       'settings': ['key', 'value'],
     };
+    const mannequinColumns = ['mannequin_x', 'mannequin_y', 'mannequin_scale'];
     bool validDay(Object? value) {
       if (value is! String) return false;
       final d = DateTime.tryParse(value);
@@ -224,13 +231,21 @@ class BackupService {
       if (rows is! List || rows.length > 20000) invalid();
       result[table] = [];
       for (final row in rows) {
-        if (row is! Map ||
-            row.length != columns[table]!.length ||
-            !columns[table]!.every(row.containsKey)) {
+        if (row is! Map) invalid();
+        // 1.7.7 wrote the three mannequin fields with the old version marker.
+        final hasMannequin =
+            table == 'outfit_items' &&
+            (version >= 6 ||
+                (version == 5 && mannequinColumns.any(row.containsKey)));
+        final expected = [
+          ...columns[table]!,
+          if (hasMannequin) ...mannequinColumns,
+        ];
+        if (row.length != expected.length || !expected.every(row.containsKey)) {
           invalid();
         }
         final m = Map<String, Object?>.from(row);
-        for (final key in columns[table]!) {
+        for (final key in expected) {
           final v = m[key];
           if (['favorite', 'worn'].contains(key)) {
             if (v != 0 && v != 1) invalid();
@@ -238,10 +253,15 @@ class BackupService {
             if (v is! int || v < 1 || v > 3) invalid();
           } else if (key == 'position') {
             if (v is! int || v < 0 || v > 30) invalid();
-          } else if (['x', 'y', 'scale'].contains(key)) {
+          } else if (['x', 'y', 'scale', ...mannequinColumns].contains(key)) {
+            final isScale = key == 'scale' || key == 'mannequin_scale';
+            final isUnset =
+                version >= 6 &&
+                key == 'mannequin_x' &&
+                v == OutfitItem.unsetMannequinX;
             if (v is! num ||
                 !v.isFinite ||
-                (key == 'scale' ? v < .5 || v > 1.8 : v < 0 || v > 1)) {
+                (!isUnset && (isScale ? v < .5 || v > 1.9 : v < 0 || v > 1))) {
               invalid();
             }
           } else {
@@ -333,7 +353,29 @@ class BackupService {
             invalid();
           }
         }
+        if (table == 'outfit_items' && !hasMannequin) {
+          m['mannequin_x'] = OutfitItem.unsetMannequinX;
+          m['mannequin_y'] = .2;
+          m['mannequin_scale'] = 1.0;
+        }
         result[table]!.add(m);
+      }
+    }
+    if (version == 5) {
+      final items = result['outfit_items']!;
+      final positioned = items
+          .where(
+            (row) =>
+                row['mannequin_x'] != .3 ||
+                row['mannequin_y'] != .2 ||
+                row['mannequin_scale'] != 1,
+          )
+          .map((row) => row['outfit_id'])
+          .toSet();
+      for (final row in items) {
+        if (!positioned.contains(row['outfit_id'])) {
+          row['mannequin_x'] = OutfitItem.unsetMannequinX;
+        }
       }
     }
     final garments = result['garments']!.map((r) => r['id']).toSet();
