@@ -110,7 +110,17 @@ void main() {
           id: 'o1',
           name: 'Trabajo',
           occasion: 'Trabajo',
-          items: [OutfitItem(garmentId: 'g1', x: .5, y: .7, scale: .8)],
+          items: [
+            OutfitItem(
+              garmentId: 'g1',
+              x: .5,
+              y: .7,
+              scale: 1.9,
+              mannequinX: .4,
+              mannequinY: .6,
+              mannequinScale: 1.1,
+            ),
+          ],
           favorite: true,
         ),
       );
@@ -128,11 +138,78 @@ void main() {
         255,
         217,
       ]);
-      expect((await repo.outfits()).single.items.single.scale, .8);
+      final item = (await repo.outfits()).single.items.single;
+      expect((item.x, item.y, item.scale), (.5, .7, 1.9));
+      expect(
+        (item.mannequinX, item.mannequinY, item.mannequinScale),
+        (.4, .6, 1.1),
+      );
       expect((await repo.plans()).single.worn, true);
       expect(await File(repo.photoPath(originalPhoto)).exists(), false);
     },
   );
+  test('Restaura también los ZIP de formato 5 creados con la 1.7.7', () async {
+    await addGarment('g1');
+    await repo.saveOutfit(
+      Outfit(
+        id: 'o1',
+        name: 'Anterior',
+        items: [
+          OutfitItem(
+            garmentId: 'g1',
+            mannequinX: .4,
+            mannequinY: .6,
+            mannequinScale: 1.2,
+          ),
+        ],
+      ),
+    );
+    final archive = ZipDecoder().decodeBytes(
+      await BackupService(repo).export(),
+    );
+    final originalManifest = archive.findFile('manifest.json')!;
+    final original = jsonDecode(utf8.decode(originalManifest.content)) as Map;
+    original['version'] = 5;
+
+    Uint8List legacyZip() {
+      final manifest = utf8.encode(jsonEncode(original));
+      final zip = Archive()
+        ..addFile(ArchiveFile('manifest.json', manifest.length, manifest));
+      for (final file in archive.files.where(
+        (f) => f.name != 'manifest.json',
+      )) {
+        zip.addFile(file);
+      }
+      return Uint8List.fromList(ZipEncoder().encode(zip));
+    }
+
+    await BackupService(repo).restore(legacyZip());
+    var item = (await repo.outfits()).single.items.single;
+    expect(
+      (item.mannequinX, item.mannequinY, item.mannequinScale),
+      (.4, .6, 1.2),
+    );
+
+    final row = (original['data']['outfit_items'] as List).single as Map;
+    row['mannequin_x'] = .3;
+    row['mannequin_y'] = .2;
+    row['mannequin_scale'] = 1;
+    await BackupService(repo).restore(legacyZip());
+    item = (await repo.outfits()).single.items.single;
+    expect(item.mannequinX, OutfitItem.unsetMannequinX);
+
+    row.remove('mannequin_x');
+    await expectLater(
+      BackupService(repo).restore(legacyZip()),
+      throwsFormatException,
+    );
+    row.remove('mannequin_y');
+    row.remove('mannequin_scale');
+    await BackupService(repo).restore(legacyZip());
+    item = (await repo.outfits()).single.items.single;
+    expect(item.mannequinX, OutfitItem.unsetMannequinX);
+  });
+
   test(
     'Copia incompleta no reemplaza datos ni borra las fotos originales',
     () async {

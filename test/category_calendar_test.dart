@@ -96,10 +96,13 @@ void main() {
       await repo.db.execute('ALTER TABLE garments DROP COLUMN details');
       await repo.db.execute('ALTER TABLE outfits DROP COLUMN reference_photo');
       await repo.db.execute('ALTER TABLE garments DROP COLUMN subtype');
+      for (final column in ['mannequin_x', 'mannequin_y', 'mannequin_scale']) {
+        await repo.db.execute('ALTER TABLE outfit_items DROP COLUMN $column');
+      }
       await repo.db.setVersion(3);
       await repo.close();
       repo = await WardrobeRepository.open(root);
-      expect(await repo.db.getVersion(), 5);
+      expect(await repo.db.getVersion(), 7);
       expect((await repo.garments()).single.id, 'g');
       expect((await repo.garments()).single.subtype, '');
     } finally {
@@ -186,6 +189,16 @@ void main() {
       );
       final controller = tester.widget<TextFormField>(name).controller!;
       await tester.enterText(name, 'Mis vaqueros');
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+      final tools = find.text('Herramientas de fotografía');
+      await tester.scrollUntilVisible(
+        tools,
+        -150,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(tools);
+      await tester.pumpAndSettle();
       await tester.scrollUntilVisible(
         find.text('Detectar datos'),
         -150,

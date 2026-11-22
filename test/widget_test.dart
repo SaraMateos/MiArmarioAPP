@@ -37,10 +37,7 @@ void main() {
         home: WardrobeHome(repo: repo),
       ),
     );
-    await waitForWidget(
-      tester,
-      find.text('Estrena tu armario virtual'),
-    );
+    await waitForWidget(tester, find.text('Estrena tu armario virtual'));
     expect(find.text('Estrena tu armario virtual'), findsOneWidget);
     await tester.tap(find.text('Outfits'));
     await tester.pumpAndSettle();
@@ -56,7 +53,7 @@ void main() {
     expect(find.text('Qué me pongo'), findsOneWidget);
     await tester.tap(find.byTooltip('Más herramientas'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Copias de seguridad'));
+    await tester.tap(find.text('Copias de seguridad · exportar y restaurar'));
     await waitForWidget(tester, find.text('Exportar copia de seguridad'));
     expect(find.text('Exportar copia de seguridad'), findsOneWidget);
     await tester.binding.handlePopRoute();

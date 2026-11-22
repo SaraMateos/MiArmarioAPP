@@ -226,6 +226,13 @@ void main() {
         data['outfits'] = data['outfits']!
             .map((m) => {...m}..remove('reference_photo'))
             .toList();
+        data['outfit_items'] = [
+          for (final row in data['outfit_items']!)
+            Map<String, Object?>.of(row)
+              ..remove('mannequin_x')
+              ..remove('mannequin_y')
+              ..remove('mannequin_scale'),
+        ];
         final converted = BackupService.validateManifest({
           'format': 'mi_armario',
           'version': 4,
@@ -237,10 +244,17 @@ void main() {
         await repo.db.execute(
           'ALTER TABLE outfits DROP COLUMN reference_photo',
         );
+        for (final column in [
+          'mannequin_x',
+          'mannequin_y',
+          'mannequin_scale',
+        ]) {
+          await repo.db.execute('ALTER TABLE outfit_items DROP COLUMN $column');
+        }
         await repo.db.setVersion(4);
         await repo.close();
         repo = await WardrobeRepository.open(root);
-        expect(await repo.db.getVersion(), 5);
+        expect(await repo.db.getVersion(), 7);
         expect((await repo.usageStats())['g']?.count, 1);
         expect((await repo.outfits()).single.referencePhoto, '');
       } finally {

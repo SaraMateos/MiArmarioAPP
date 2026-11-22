@@ -356,6 +356,7 @@ class _WardrobeHomeState extends State<WardrobeHome> {
                             season = 'Todas';
                             occasion = 'Todas';
                             onlyFavorites = false;
+                            sortBy = 'Favoritas y nombre';
                           });
                           Navigator.pop(context);
                         },
@@ -410,8 +411,68 @@ class _WardrobeHomeState extends State<WardrobeHome> {
     }
   }
 
+  Future<void> openGarmentActions(Garment g) async {
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (c) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: [
+            ListTile(
+              title: Text(g.name),
+              subtitle: Text(
+                '${g.subtype.isEmpty ? g.category : g.subtype} · ${g.status}',
+              ),
+            ),
+            ListTile(
+              title: Text(
+                g.favorite ? 'Quitar de favoritas' : 'Marcar favorita',
+              ),
+              onTap: () => Navigator.pop(c, 'favorite'),
+            ),
+            for (final state in garmentStates)
+              ListTile(
+                title: Text(state),
+                onTap: () => Navigator.pop(c, state),
+              ),
+            ListTile(
+              title: const Text('Sugerir outfit con esta prenda'),
+              onTap: () => Navigator.pop(c, 'suggest'),
+            ),
+            ListTile(
+              title: const Text('Editar'),
+              onTap: () => Navigator.pop(c, 'edit'),
+            ),
+            ListTile(
+              title: const Text('Eliminar'),
+              onTap: () => Navigator.pop(c, 'delete'),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (!mounted || selected == null) return;
+    if (selected == 'favorite') {
+      await action(() => repo.favorite('garments', g.id, !g.favorite));
+    } else {
+      await garmentMenu(g, selected);
+    }
+  }
+
   Widget wardrobe() {
     final list = filteredGarments;
+    final activeFilters = <(String, VoidCallback)>[
+      if (availability != 'Todas') (availability, () => availability = 'Todas'),
+      if (subtypeFilter != 'Todos')
+        (subtypeFilter, () => subtypeFilter = 'Todos'),
+      if (color != 'Todos') (color, () => color = 'Todos'),
+      if (season != 'Todas') (season, () => season = 'Todas'),
+      if (occasion != 'Todas') (occasion, () => occasion = 'Todas'),
+      if (onlyFavorites) ('Solo favoritas', () => onlyFavorites = false),
+      if (sortBy != 'Favoritas y nombre')
+        (sortBy, () => sortBy = 'Favoritas y nombre'),
+    ];
     return Column(
       children: [
         if (backupDue(reminder, DateTime.now(), hasData: garments.isNotEmpty))
@@ -443,6 +504,23 @@ class _WardrobeHomeState extends State<WardrobeHome> {
                   ),
                 ],
               ),
+              if (activeFilters.isNotEmpty)
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      for (final (label, clear) in activeFilters)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 8, right: 8),
+                          child: InputChip(
+                            label: Text(label),
+                            onDeleted: () => setState(clear),
+                            deleteButtonTooltipMessage: 'Quitar filtro: $label',
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
               const SizedBox(height: 12),
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -493,71 +571,28 @@ class _WardrobeHomeState extends State<WardrobeHome> {
                     final g = list[i];
                     return Card(
                       clipBehavior: Clip.antiAlias,
-                      child: Semantics(
-                        label: g.name,
-                        button: true,
-                        child: InkWell(
-                          onTap: () => editGarment(g),
-                          onLongPress: () async {
-                            final selected = await showModalBottomSheet<String>(
-                              context: context,
-                              showDragHandle: true,
-                              builder: (c) => SafeArea(
-                                child: ListView(
-                                  shrinkWrap: true,
-                                  children: [
-                                    ListTile(
-                                      title: Text(g.name),
-                                      subtitle: Text(
-                                        '${g.subtype.isEmpty ? g.category : g.subtype} · ${g.status}',
-                                      ),
-                                    ),
-                                    ListTile(
-                                      title: Text(
-                                        g.favorite
-                                            ? 'Quitar de favoritas'
-                                            : 'Marcar favorita',
-                                      ),
-                                      onTap: () => Navigator.pop(c, 'favorite'),
-                                    ),
-                                    for (final state in garmentStates)
-                                      ListTile(
-                                        title: Text(state),
-                                        onTap: () => Navigator.pop(c, state),
-                                      ),
-                                    ListTile(
-                                      title: const Text(
-                                        'Sugerir outfit con esta prenda',
-                                      ),
-                                      onTap: () => Navigator.pop(c, 'suggest'),
-                                    ),
-                                    ListTile(
-                                      title: const Text('Editar'),
-                                      onTap: () => Navigator.pop(c, 'edit'),
-                                    ),
-                                    ListTile(
-                                      title: const Text('Eliminar'),
-                                      onTap: () => Navigator.pop(c, 'delete'),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                            if (selected == null) return;
-                            if (selected == 'favorite') {
-                              await action(
-                                () => repo.favorite(
-                                  'garments',
-                                  g.id,
-                                  !g.favorite,
-                                ),
-                              );
-                            } else {
-                              await garmentMenu(g, selected);
-                            }
-                          },
-                          child: AutoFramedPhoto(repo.photoPath(g.photo)),
-                        ),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Semantics(
+                            label: g.name,
+                            button: true,
+                            child: InkWell(
+                              onTap: () => editGarment(g),
+                              onLongPress: () => openGarmentActions(g),
+                              child: AutoFramedPhoto(repo.photoPath(g.photo)),
+                            ),
+                          ),
+                          Positioned(
+                            top: 4,
+                            right: 4,
+                            child: IconButton.filledTonal(
+                              tooltip: 'Acciones de ${g.name}',
+                              onPressed: () => openGarmentActions(g),
+                              icon: const Icon(Icons.more_horiz),
+                            ),
+                          ),
+                        ],
                       ),
                     );
                   },

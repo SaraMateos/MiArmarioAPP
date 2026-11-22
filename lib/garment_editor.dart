@@ -18,12 +18,18 @@ class GarmentEditor extends StatefulWidget {
   final Garment? garment;
   final String? recoveredPhoto;
   final bool batchMode;
+  final PhotoAnalysis? initialAnalysis;
+  final String? initialSubtype, initialSeason, initialOccasion;
   const GarmentEditor({
     super.key,
     required this.repo,
     this.garment,
     this.recoveredPhoto,
     this.batchMode = false,
+    this.initialAnalysis,
+    this.initialSubtype,
+    this.initialSeason,
+    this.initialOccasion,
   });
   @override
   State<GarmentEditor> createState() => _GarmentEditorState();
@@ -83,14 +89,22 @@ class _GarmentEditorState extends State<GarmentEditor> {
     generatedBase = subtype.isEmpty ? 'Prenda nueva' : subtype;
     notes = TextEditingController(text: g?.notes ?? '');
     category = g?.category ?? categories.first;
+    if (g == null && widget.initialSubtype != null) {
+      subtype = widget.initialSubtype!;
+      category = garmentTypes[subtype]!;
+      generatedBase = subtype;
+      name.text = subtype;
+      needsReview = false;
+      typeConfirmed = true;
+    }
     colorTags = [
       ...g?.colorTags ?? [colors.first],
     ];
     seasonTags = [
-      ...g?.seasonTags ?? [seasons.first],
+      ...g?.seasonTags ?? [widget.initialSeason ?? seasons.first],
     ];
     occasionTags = [
-      ...g?.occasionTags ?? [occasions.first],
+      ...g?.occasionTags ?? [widget.initialOccasion ?? occasions.first],
     ];
     warmth = g?.warmth ?? 2;
     status = g?.status ?? 'Disponible';
@@ -100,7 +114,15 @@ class _GarmentEditorState extends State<GarmentEditor> {
     favorite = g?.favorite ?? false;
     newPhoto = widget.recoveredPhoto;
     if (widget.garment == null && newPhoto != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => analyze());
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final initial = widget.initialAnalysis;
+        if (initial == null) {
+          analyze();
+        } else {
+          applyAnalysis(initial);
+        }
+      });
     }
   }
 
@@ -213,7 +235,7 @@ class _GarmentEditorState extends State<GarmentEditor> {
       typeAlternatives = a.alternatives
           .where(garmentTypes.containsKey)
           .toList();
-      final detected = inferGarmentType(a.suggestedName ?? '');
+      final detected = a.suggestedType;
       final manualType = typeConfirmed && subtype.isNotEmpty;
       if (!manualType) {
         subtype = detected;
@@ -222,11 +244,12 @@ class _GarmentEditorState extends State<GarmentEditor> {
         } else if (a.category != null) {
           category = a.category!;
         }
-        needsReview =
-            detected.isEmpty || a.confidence < .65 || a.warning != null;
+        needsReview = a.needsTypeReview;
       }
       if (a.colors.isNotEmpty) colorTags = a.colors;
-      generatedBase = a.suggestedName ?? 'Prenda nueva';
+      generatedBase = manualType
+          ? subtype
+          : (a.suggestedName ?? 'Prenda nueva');
       if (automaticName) {
         name.text =
             '$generatedBase${a.colors.isNotEmpty ? ' ${a.colors.first.toLowerCase()}' : ''}';

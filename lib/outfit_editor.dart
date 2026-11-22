@@ -46,10 +46,22 @@ class _OutfitEditorState extends State<OutfitEditor> {
     name = TextEditingController(text: widget.outfit?.name ?? '');
     notes = TextEditingController(text: widget.outfit?.notes ?? '');
     items = widget.outfit?.items.map((i) => i.copy()).toList() ?? [];
-    mannequinItems = items.map((i) => OutfitItem(
-      garmentId: i.garmentId, x: i.mannequinX, y: i.mannequinY,
-      scale: i.mannequinScale,
-    )).toList();
+    final garmentsById = {for (final g in widget.garments) g.id: g};
+    mannequinItems = [
+      for (final item in items)
+        if (item.mannequinX == OutfitItem.unsetMannequinX &&
+            garmentsById.containsKey(item.garmentId))
+          _mannequinItem(garmentsById[item.garmentId]!)
+        else
+          OutfitItem(
+            garmentId: item.garmentId,
+            x: item.mannequinX == OutfitItem.unsetMannequinX
+                ? item.x
+                : item.mannequinX,
+            y: item.mannequinY,
+            scale: item.mannequinScale,
+          ),
+    ];
     occasionTags = [
       ...widget.outfit?.occasionTags ?? [occasions.first],
     ];
@@ -84,30 +96,20 @@ class _OutfitEditorState extends State<OutfitEditor> {
     );
     if (garment != null && mounted) {
       setState(() {
-        items.add(
-          OutfitItem(
-            garmentId: garment.id,
-            x: _defaultPosition(garment, items.length).$1,
-            y: _defaultPosition(garment, items.length).$2,
-          ),
+        final position = _defaultPosition(garment);
+        final byId = {for (final g in widget.garments) g.id: g};
+        final priority = _layerPriority(garment);
+        final nextLayer = items.indexWhere((item) {
+          final existing = byId[item.garmentId];
+          return existing != null && _layerPriority(existing) > priority;
+        });
+        final index = nextLayer < 0 ? items.length : nextLayer;
+        items.insert(
+          index,
+          OutfitItem(garmentId: garment.id, x: position.$1, y: position.$2),
         );
-        mannequinItems.add(OutfitItem(
-          garmentId: garment.id,
-          x: _defaultPosition(garment, items.length - 1).$1,
-          y: _defaultPosition(garment, items.length - 1).$2,
-        ));
-        _sortLayers();
-        // Solo se recoloca la prenda recién añadida; no se alteran ajustes
-        // manuales que el usuario ya haya hecho en el resto del outfit.
-        final newMannequinItem = mannequinItems.firstWhere(
-          (item) => item.garmentId == garment.id,
-        );
-        final mannequinPosition = _defaultPosition(garment, mannequinItems.length - 1);
-        newMannequinItem
-          ..x = mannequinPosition.$1
-          ..y = mannequinPosition.$2
-          ..scale = _defaultScale(garment);
-        selected = items.indexWhere((i) => i.garmentId == garment.id);
+        mannequinItems.insert(index, _mannequinItem(garment));
+        selected = index;
       });
     }
   }
@@ -115,7 +117,7 @@ class _OutfitEditorState extends State<OutfitEditor> {
   String _garmentKind(Garment garment) =>
       '${garment.category} ${garment.subtype}'.toLowerCase();
 
-  (double, double) _defaultPosition(Garment garment, int index) {
+  (double, double) _defaultPosition(Garment garment) {
     final kind = _garmentKind(garment);
     // Posiciones normalizadas en el lienzo: las prendas interiores quedan
     // detrás de las capas exteriores y cada familia ocupa su zona natural.
@@ -150,55 +152,95 @@ class _OutfitEditorState extends State<OutfitEditor> {
   double _defaultScale(Garment garment) {
     final kind = _garmentKind(garment);
     if (kind.contains('calzado') || kind.contains('zapato') ||
-        kind.contains('bota') || kind.contains('sandalia')) return .62;
+        kind.contains('bota') || kind.contains('sandalia')) {
+      return .62;
+    }
     if (kind.contains('accesorio') || kind.contains('bolso') ||
-        kind.contains('bufanda') || kind.contains('gorro')) return .72;
+        kind.contains('bufanda') || kind.contains('gorro')) {
+      return .72;
+    }
     if (kind.contains('inferior') || kind.contains('pantal') ||
-        kind.contains('falda') || kind.contains('short')) return .94;
-    if (kind.contains('vestido') || kind.contains('mono')) return 1.02;
+        kind.contains('falda') || kind.contains('short')) {
+      return .94;
+    }
+    if (kind.contains('vestido') || kind.contains('mono')) {
+      return 1.02;
+    }
     if (kind.contains('abrigo') || kind.contains('chaqueta') ||
-        kind.contains('americana') || kind.contains('chaleco')) return 1.02;
+        kind.contains('americana') || kind.contains('chaleco')) {
+      return 1.02;
+    }
     return .92;
   }
 
   int _layerPriority(Garment g) {
     final kind = _garmentKind(g);
     if (kind.contains('calzado') || kind.contains('zapato') ||
-        kind.contains('bota') || kind.contains('sandalia')) return 0;
+        kind.contains('bota') || kind.contains('sandalia')) {
+      return 0;
+    }
     if (kind.contains('inferior') || kind.contains('pantal') ||
-        kind.contains('falda') || kind.contains('short')) return 1;
-    if (kind.contains('vestido') || kind.contains('mono')) return 2;
+        kind.contains('falda') || kind.contains('short')) {
+      return 1;
+    }
+    if (kind.contains('vestido') || kind.contains('mono')) {
+      return 2;
+    }
     if (kind.contains('camiseta') || kind.contains('camisa') ||
-        kind.contains('blusa') || kind.contains('polo')) return 3;
-    if (kind.contains('jersey') || kind.contains('sudadera')) return 4;
+        kind.contains('blusa') || kind.contains('polo')) {
+      return 3;
+    }
+    if (kind.contains('jersey') || kind.contains('sudadera')) {
+      return 4;
+    }
     if (kind.contains('chaqueta') || kind.contains('abrigo') ||
-        kind.contains('americana') || kind.contains('chaleco')) return 5;
+        kind.contains('americana') || kind.contains('chaleco')) {
+      return 5;
+    }
     return 2;
   }
 
-  void _sortLayers() {
-    final byId = {for (final g in widget.garments) g.id: g};
-    int compare(OutfitItem a, OutfitItem b) =>
-        _layerPriority(byId[a.garmentId] ?? widget.garments.first)
-            .compareTo(_layerPriority(byId[b.garmentId] ?? widget.garments.first));
-    items.sort(compare);
-    mannequinItems.sort(compare);
+  OutfitItem _mannequinItem(Garment garment) {
+    final position = _defaultPosition(garment);
+    return OutfitItem(
+      garmentId: garment.id,
+      x: position.$1,
+      y: position.$2,
+      scale: _defaultScale(garment),
+    );
   }
 
-  void _positionOnMannequin(List<OutfitItem> target) {
-    for (final item in target) {
-      final garment = widget.garments.where((g) => g.id == item.garmentId).firstOrNull;
-      if (garment == null) continue;
-      final pos = _defaultPosition(garment, target.indexOf(item));
-      item.x = pos.$1;
-      item.y = pos.$2;
-      item.scale = _defaultScale(garment);
-    }
+  void removeSelected() {
+    final id = visibleItems[selected!].garmentId;
+    setState(() {
+      items.removeWhere((item) => item.garmentId == id);
+      mannequinItems.removeWhere((item) => item.garmentId == id);
+      selected = null;
+    });
+  }
+
+  void moveSelectedLayer({required bool toFront}) {
+    final id = visibleItems[selected!].garmentId;
+    setState(() {
+      for (final composition in [items, mannequinItems]) {
+        final index = composition.indexWhere((item) => item.garmentId == id);
+        final item = composition.removeAt(index);
+        composition.insert(toFront ? composition.length : 0, item);
+      }
+      selected = toFront ? visibleItems.length - 1 : 0;
+    });
   }
 
   void arrangeOnFigure() {
+    final byId = {for (final g in widget.garments) g.id: g};
     setState(() {
-      _positionOnMannequin(mannequinItems);
+      mannequinItems = [
+        for (final item in mannequinItems)
+          if (byId.containsKey(item.garmentId))
+            _mannequinItem(byId[item.garmentId]!)
+          else
+            item,
+      ];
       selected = null;
     });
   }
@@ -224,6 +266,9 @@ class _OutfitEditorState extends State<OutfitEditor> {
       if (pendingReference != null) {
         imported = await widget.repo.importPhoto(pendingReference!);
       }
+      final mannequinById = {
+        for (final item in mannequinItems) item.garmentId: item,
+      };
       await widget.repo.saveOutfit(
         Outfit(
           id: widget.outfit?.id ?? const Uuid().v4(),
@@ -234,12 +279,15 @@ class _OutfitEditorState extends State<OutfitEditor> {
               : name.text.trim(),
           occasionTags: occasionTags,
           items: [
-            for (var i = 0; i < items.length; i++)
-              OutfitItem(garmentId: items[i].garmentId,
-                x: items[i].x, y: items[i].y, scale: items[i].scale,
-                mannequinX: mannequinItems.firstWhere((m) => m.garmentId == items[i].garmentId).x,
-                mannequinY: mannequinItems.firstWhere((m) => m.garmentId == items[i].garmentId).y,
-                mannequinScale: mannequinItems.firstWhere((m) => m.garmentId == items[i].garmentId).scale,
+            for (final item in items)
+              OutfitItem(
+                garmentId: item.garmentId,
+                x: item.x,
+                y: item.y,
+                scale: item.scale,
+                mannequinX: mannequinById[item.garmentId]!.x,
+                mannequinY: mannequinById[item.garmentId]!.y,
+                mannequinScale: mannequinById[item.garmentId]!.scale,
               ),
           ],
           notes: notes.text.trim(),
@@ -327,63 +375,71 @@ class _OutfitEditorState extends State<OutfitEditor> {
                   color: Theme.of(context).colorScheme.surfaceContainerLow,
                   child: Padding(
                     padding: const EdgeInsets.all(8),
-                    child: Column(mainAxisSize: MainAxisSize.min, children: [
-                      Row(children: [
-                        const Icon(Icons.open_with, size: 18),
-                        const SizedBox(width: 6),
-                        const Text('Tamaño'),
-                        Expanded(child: Slider(
-                          min: .5, max: 1.6,
-                          value: visibleItems[selected!].scale.clamp(.5, 1.6),
-                          onChanged: (v) => setState(() => visibleItems[selected!].scale = v),
-                        )),
-                        IconButton(
-                          tooltip: 'Eliminar prenda',
-                          visualDensity: VisualDensity.compact,
-                          onPressed: () => setState(() {
-                            items.removeAt(selected!);
-                            mannequinItems.removeAt(selected!);
-                            selected = null;
-                          }),
-                          icon: const Icon(Icons.delete_outline, color: Colors.red),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.open_with, size: 18),
+                            const SizedBox(width: 6),
+                            const Text('Tamaño'),
+                            Expanded(
+                              child: Slider(
+                                min: .5,
+                                max: 1.9,
+                                value: visibleItems[selected!].scale.clamp(
+                                  .5,
+                                  1.9,
+                                ),
+                                onChanged: (v) => setState(
+                                  () => visibleItems[selected!].scale = v,
+                                ),
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: 'Eliminar prenda',
+                              visualDensity: VisualDensity.compact,
+                              onPressed: removeSelected,
+                              icon: const Icon(
+                                Icons.delete_outline,
+                                color: Colors.red,
+                              ),
+                            ),
+                          ],
                         ),
-                      ]),
-                      Wrap(
-                        alignment: WrapAlignment.spaceEvenly,
-                        spacing: 4,
-                        children: [
-                          TextButton.icon(
-                            onPressed: () => setState(() {
-                              visibleItems[selected!].x = .5;
-                              visibleItems[selected!].y = .5;
-                            }),
-                            icon: const Icon(Icons.center_focus_strong, size: 18),
-                            label: const Text('Centrar'),
-                          ),
-                          TextButton.icon(
-                            onPressed: () => setState(() {
-                              final i = selected!;
-                              final free = items.removeAt(i);
-                              final figure = mannequinItems.removeAt(i);
-                              items.add(free);
-                              mannequinItems.add(figure);
-                              selected = items.length - 1;
-                            }),
-                            icon: const Icon(Icons.flip_to_front, size: 18),
-                            label: const Text('Al frente'),
-                          ),
-                          TextButton.icon(
-                            onPressed: () => setState(() {
-                              final item = visibleItems.removeAt(selected!);
-                              visibleItems.insert(0, item);
-                              selected = 0;
-                            }),
-                            icon: const Icon(Icons.vertical_align_bottom, size: 18),
-                            label: const Text('Al fondo'),
-                          ),
-                        ],
-                      ),
-                    ]),
+                        Wrap(
+                          alignment: WrapAlignment.spaceEvenly,
+                          spacing: 4,
+                          children: [
+                            TextButton.icon(
+                              onPressed: () => setState(() {
+                                visibleItems[selected!].x = .5;
+                                visibleItems[selected!].y = .5;
+                              }),
+                              icon: const Icon(
+                                Icons.center_focus_strong,
+                                size: 18,
+                              ),
+                              label: const Text('Centrar'),
+                            ),
+                            TextButton.icon(
+                              onPressed: () => moveSelectedLayer(toFront: true),
+                              icon: const Icon(Icons.flip_to_front, size: 18),
+                              label: const Text('Al frente'),
+                            ),
+                            TextButton.icon(
+                              onPressed: () =>
+                                  moveSelectedLayer(toFront: false),
+                              icon: const Icon(
+                                Icons.vertical_align_bottom,
+                                size: 18,
+                              ),
+                              label: const Text('Al fondo'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -467,12 +523,7 @@ class _OutfitEditorState extends State<OutfitEditor> {
                             IconButton(
                               tooltip: 'Eliminar prenda',
                               visualDensity: VisualDensity.compact,
-                              onPressed: () => setState(() {
-                                final id = visibleItems[selected!].garmentId;
-                                items.removeWhere((item) => item.garmentId == id);
-                                mannequinItems.removeWhere((item) => item.garmentId == id);
-                                selected = null;
-                              }),
+                              onPressed: removeSelected,
                               icon: const Icon(Icons.delete_outline, color: Colors.red),
                             ),
                           ],
@@ -485,9 +536,14 @@ class _OutfitEditorState extends State<OutfitEditor> {
                             Expanded(
                               child: Slider(
                                 min: .5,
-                                max: 1.6,
-                                value: visibleItems[selected!].scale.clamp(.5, 1.6),
-                                onChanged: (v) => setState(() => visibleItems[selected!].scale = v),
+                                max: 1.9,
+                                value: visibleItems[selected!].scale.clamp(
+                                  .5,
+                                  1.9,
+                                ),
+                                onChanged: (v) => setState(
+                                  () => visibleItems[selected!].scale = v,
+                                ),
                               ),
                             ),
                           ],
@@ -501,7 +557,7 @@ class _OutfitEditorState extends State<OutfitEditor> {
                                   .where((g) => g.id == visibleItems[selected!].garmentId)
                                   .firstOrNull;
                               if (garment != null) {
-                                final pos = _defaultPosition(garment, selected!);
+                                final pos = _defaultPosition(garment);
                                 visibleItems[selected!].y = pos.$2;
                               } else {
                                 visibleItems[selected!].y = .5;
@@ -608,6 +664,15 @@ class _OutfitEditorState extends State<OutfitEditor> {
                 onChanged: (v) => setState(() => occasionTags = v),
               ),
               const SizedBox(height: 16),
+              TextFormField(
+                controller: name,
+                maxLength: 100,
+                textCapitalization: TextCapitalization.sentences,
+                decoration: const InputDecoration(
+                  labelText: 'Nombre del outfit (opcional)',
+                ),
+              ),
+              const SizedBox(height: 12),
               TextFormField(
                 controller: notes,
                 maxLength: 2000,

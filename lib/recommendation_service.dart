@@ -74,11 +74,7 @@ class RecommendationService {
     final excluded = profile?.excludedOn(date) ?? <String>{};
     garments = garments
         .where(
-          (g) =>
-              g.available &&
-              !excluded.contains(g.id) &&
-              g.details['needs_review'] != true &&
-              g.details['type_review'] != true,
+          (g) => g.available && !excluded.contains(g.id) && !g.needsTypeReview,
         )
         .toList();
     final required = {...requiredIds, ?anchorId};
@@ -337,15 +333,31 @@ class RecommendationService {
               };
             }
             extraScore += feedbackScore.clamp(-12, 12);
+            final lastUsed = usage[least.id]?.lastWorn;
+            final daysSinceUse = lastUsed == null
+                ? null
+                : calendarDayDifference(date, lastUsed);
             final reasons = <String>[
+              if (rainy)
+                if (shoe?.details['rain'] == true &&
+                    coat?.details['rain'] == true)
+                  'Calzado y capa exterior con protección para lluvia'
+                else if (coat?.details['rain'] == true)
+                  '«${coat!.name}» protege de la lluvia. Revisa el calzado'
+                else if (shoe?.details['rain'] == true)
+                  '«${shoe!.name}» protege de la lluvia. Revisa la capa exterior'
+                else
+                  'Revisa el calzado y la capa exterior si llueve',
+              if ((usage[least.id]?.count ?? 0) == 0)
+                '«${least.name}» todavía no tiene usos registrados'
+              else if (daysSinceUse != null && daysSinceUse >= 14)
+                'Hace $daysSinceUse días que no registras un uso de «${least.name}»'
+              else
+                '«${least.name}» tiene ${usage[least.id]!.count} usos registrados',
               if (desiredStyle != 'Sin preferencia')
                 'Orientado a estilo ${desiredStyle.toLowerCase()}',
               if (middle != null)
                 'Base + capa intermedia${coat != null ? ' + exterior' : ''}',
-              if (rainy)
-                shoe?.details['rain'] == true && coat?.details['rain'] == true
-                    ? 'Calzado y exterior con protección de lluvia indicada'
-                    : 'Lluvia: falta confirmar protección del calzado o exterior',
               if (windy)
                 coat?.details['wind'] == true
                     ? 'Exterior con protección del viento indicada'
@@ -358,7 +370,6 @@ class RecommendationService {
               (effectiveWarmth - target).abs() <= .7
                   ? 'Adecuado para ${climate.label.toLowerCase()}'
                   : 'Revisa el abrigo para esta temperatura',
-              'Recupera «${least.name}»: ${usage[least.id]?.count ?? 0} usos registrados',
               recent.isEmpty
                   ? 'Sin prendas usadas en los últimos 3 días'
                   : 'Incluye ${recent.length} prendas usadas recientemente',
@@ -477,22 +488,11 @@ class RecommendationService {
     RecommendationProfile? profile,
     DateTime? date,
   }) {
-    final pending = garments
-        .where(
-          (g) =>
-              g.details['needs_review'] == true ||
-              g.details['type_review'] == true,
-        )
-        .length;
+    final pending = garments.where((g) => g.needsTypeReview).length;
     if (pending > 0) {
-      final reviewed = garments
-          .where(
-            (g) =>
-                g.details['needs_review'] != true &&
-                g.details['type_review'] != true,
-          )
-          .toList();
-      return '$pending fichas Por revisar. Confirma su tipo para incluirlas en propuestas. ${noSuggestionReason(reviewed, anchorId: anchorId, profile: profile, date: date)}';
+      return pending == 1
+          ? 'Hay una ficha Por revisar. Confirma su tipo para incluirla en las propuestas.'
+          : 'Hay $pending fichas Por revisar. Confirma sus tipos para incluirlas en las propuestas.';
     }
     final excluded = date == null
         ? <String>{}
@@ -517,13 +517,15 @@ class RecommendationService {
       return '$blocked conjuntos vinculados tienen alguna prenda no disponible. Revisa su disponibilidad o desvincúlalos. ${noSuggestionReason(garments, anchorId: anchorId)}';
     }
     if (garments.isEmpty) {
-      return 'Todavía no hay prendas guardadas. Tras importar fotos, revisa cada una y pulsa Guardar prenda.';
+      return 'Todavía no hay prendas guardadas. Añade una foto o importa un lote desde Armario.';
     }
     final available = garments.where((g) => g.available).toList();
     if (available.isEmpty) {
       return 'Las ${garments.length} prendas están en lavado o guardadas. Cambia alguna a Disponible para proponer outfits.';
     }
-    final tops = available.where((g) => roleOf(g) == 'Parte superior').length;
+    final tops = available
+        .where((g) => roleOf(g) == 'Parte superior' && layerOf(g) == 'Base')
+        .length;
     final bottoms = available
         .where((g) => roleOf(g) == 'Parte inferior')
         .length;

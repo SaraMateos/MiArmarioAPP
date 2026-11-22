@@ -1,3 +1,15 @@
+## 1.7.8
+
+- Copias en formato 6, recuperación de ZIP de la 1.7.7 y conservación de las dos composiciones de cada outfit.
+- Orden de capas sincronizado entre Libre y Maniquí. Colocación por tipo en maniquíes anteriores sin configurar y nombre de outfit editable.
+- Alta rápida por lotes con análisis local, temporada y ocasión comunes, revisión de tipos y reintento de errores.
+- Menú visible en las tarjetas, filtros activos eliminables y acciones contextuales en Ideas.
+- Validación de Flutter en pull requests y cambios de la rama principal.
+
+## 1.7.7
+
+- Selector fotográfico, controles de composición y guardado separado de posición y escala en Libre y Maniquí.
+
 ## 1.7.6
 
 - Encuadre automático no destructivo sobre fondos simples en Armario y editor; se evita reducir el tamaño útil de la prenda por márgenes del archivo.

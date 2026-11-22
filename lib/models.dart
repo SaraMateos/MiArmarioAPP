@@ -177,6 +177,8 @@ class Garment {
   }) : colorTags = List.unmodifiable(colorTags ?? [color]),
        seasonTags = List.unmodifiable(seasonTags ?? [season]),
        occasionTags = List.unmodifiable(occasionTags ?? [occasion]);
+  bool get needsTypeReview =>
+      details['needs_review'] == true || details['type_review'] == true;
   bool get available => status == 'Disponible';
   String get color => colorTags.join(', ');
   String get season => seasonTags.join(', ');
@@ -218,6 +220,8 @@ class Garment {
 }
 
 class OutfitItem {
+  static const unsetMannequinX = -1.0;
+
   final String garmentId;
   double x, y, scale;
   double mannequinX, mannequinY, mannequinScale;
@@ -226,16 +230,18 @@ class OutfitItem {
     this.x = .1,
     this.y = .1,
     this.scale = 1,
-    double? mannequinX, double? mannequinY, double? mannequinScale,
-  }) : mannequinX = mannequinX ?? x, mannequinY = mannequinY ?? y, mannequinScale = mannequinScale ?? scale;
+    this.mannequinX = unsetMannequinX,
+    this.mannequinY = .2,
+    this.mannequinScale = 1,
+  });
   factory OutfitItem.fromMap(Map<String, Object?> m) => OutfitItem(
     garmentId: m['garment_id'] as String,
     x: (m['x'] as num).toDouble(),
     y: (m['y'] as num).toDouble(),
     scale: (m['scale'] as num).toDouble(),
-    mannequinX: (m['mannequin_x'] as num?)?.toDouble(),
-    mannequinY: (m['mannequin_y'] as num?)?.toDouble(),
-    mannequinScale: (m['mannequin_scale'] as num?)?.toDouble(),
+    mannequinX: (m['mannequin_x'] as num?)?.toDouble() ?? unsetMannequinX,
+    mannequinY: (m['mannequin_y'] as num?)?.toDouble() ?? .2,
+    mannequinScale: (m['mannequin_scale'] as num?)?.toDouble() ?? 1,
   );
   Map<String, Object?> toMap(String outfitId, int position) => {
     'outfit_id': outfitId,

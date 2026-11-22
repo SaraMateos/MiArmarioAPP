@@ -1,3 +1,14 @@
+# Validación de Mi Armario 1.7.8
+
+Comprobaciones ejecutadas en Linux con Flutter 3.47.7 y Dart 3.13.5:
+
+- `flutter pub get --enforce-lockfile` resolvió las dependencias bloqueadas.
+- `flutter analyze --no-pub` terminó sin incidencias.
+- `flutter test --no-pub` terminó con 71 pruebas superadas. Incluye copias nuevas, lectura del ZIP de la 1.7.7, composición del maniquí tras migrar, orden de capas, arrastre, alta múltiple y reintento sin duplicar las prendas que ya se guardaron.
+- Sigue pendiente generar el APK con la firma habitual y probar en Android la actualización sobre la instalación existente, la restauración de una copia real y el procesamiento nativo de fotos. Usa una copia de prueba para validar la restauración.
+
+---
+
 # Validación — Mi Armario 1.7.6
 
 No se ha ejecutado Flutter en este entorno; las pruebas históricas de versiones anteriores no acreditan esta entrega.

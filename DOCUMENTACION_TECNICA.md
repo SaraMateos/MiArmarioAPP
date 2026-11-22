@@ -1,4 +1,4 @@
-# Documentación técnica — Mi Armario 1.7.6
+# Documentación técnica de Mi Armario 1.7.8
 
 ## Base y alcance
 
@@ -10,7 +10,7 @@ Flutter 3.47.7, Dart 3.13.5, Material 3, localización española, JDK 17 y Andro
 
 Los modelos empaquetados son EfficientNet Lite0 (clasificación general), Selfie multiclass (aislamiento) y U2NetP (fondo). No se descargan modelos en ejecución ni se transmiten fotos. EfficientNet no es un modelo especializado en moda: las etiquetas se traducen a tipos mediante reglas y se deben revisar.
 
-Tiempo: Open-Meteo geocoding y forecast mediante HTTPS; temperatura diaria, probabilidad de lluvia y viento. `Hoy` muestra la previsión almacenada y su fecha de consulta; Ideas actualiza la previsión de la ciudad. No se consulta GPS. Dependencias/licencias: `THIRD_PARTY_NOTICES.md`, `licenses/` y manifiesto de modelos.
+Tiempo: Open-Meteo geocoding y forecast mediante HTTPS; temperatura diaria, probabilidad de lluvia y viento. Ideas consulta y actualiza la previsión de la ciudad y lee el resultado almacenado. No se consulta GPS. Dependencias/licencias: `THIRD_PARTY_NOTICES.md`, `licenses/` y manifiesto de modelos.
 
 ## Componentes
 
@@ -43,13 +43,13 @@ flowchart TD
 
 ## Datos y migración
 
-Directorio privado `wardrobe/`: `wardrobe.db` y `photos/`. Se conserva la versión de esquema 5 de la base recuperada. `onOpen` crea `undo_actions` con `IF NOT EXISTS`, sin modificar columnas anteriores.
+Directorio privado `wardrobe/`: `wardrobe.db` y `photos/`. El esquema SQLite actual es la versión 7. `onOpen` crea `undo_actions` con `IF NOT EXISTS`, sin modificar columnas anteriores.
 
 Tablas: `garments` (foto, tipo, selecciones JSON, disponibilidad, abrigo, detalles); `outfits` (metadatos y referencia); `outfit_items` (prenda y transformación); `plans` (fecha y usado); `garment_wears` (fecha e identificador de prenda); `settings` (clima, preferencias y herramientas); `undo_actions` (id, etiqueta y estado anterior/posterior JSON). No usa tablas externas, vistas ni procedimientos almacenados.
 
 `needs_review` y `type_review` se aceptan como indicadores booleanos en detalles. La edición conserva revisión pendiente hasta confirmar el tipo. La edición por lotes de tipo limpia ambos indicadores. Selecciones originales de texto se convierten a listas durante las migraciones ya implementadas. Los tipos se filtran por categoría en ficha y filtros; cambiar categoría reinicia el filtro de tipo.
 
-Copias incluyen tablas principales y fotos; el diario de deshacer no se exporta. Restaurar elimina el diario dentro de la misma transacción que sustituye datos. Se conserva la validación de rutas, relaciones, campos, selecciones y límites (ZIP 250 MB; contenido 500 MB). Los datos de `action_history` de una instalación anterior no se usan como nuevas acciones de deshacer.
+Las copias incluyen las tablas principales y las fotos en el formato 6. El diario de deshacer queda fuera del ZIP. Restaurar elimina el diario dentro de la misma transacción que sustituye datos. Se conserva la validación de rutas, relaciones, campos, selecciones y límites (ZIP 250 MB; contenido 500 MB). Los datos de `action_history` de una instalación anterior no se usan como nuevas acciones de deshacer.
 
 ## Reglas nuevas
 
@@ -83,7 +83,7 @@ La vista de composición ajusta el encuadre al conjunto de prendas para aprovech
 
 Android usa AGP 9.1.0, Gradle 9.3.1 y el plugin Kotlin 2.4.0 aplicado explícitamente a la app. Se desactiva Kotlin integrado (`android.builtInKotlin=false`) para mantener compatibilidad con los plugins Android de Flutter. Se conserva `android.newDsl=false`; esta compatibilidad deberá revisarse al actualizar AGP o los plugins.
 
-La navegación inicia en Hoy y su cuadrícula contiene solo fotos, con nombres accesibles mediante Semantics. Pulsación larga abre las acciones. `matchesCategoryGroup` agrupa Abrigos dentro de Parte superior para la UI; `roleOf` sigue distinguiendo exterior en las reglas de outfits. La revisión prioriza foto, nombre y tipo, permite ampliar la foto y divide datos opcionales en cuatro ExpansionTile hermanos con ancho completo. Los textos de progreso distinguen análisis, recorte y guardado. `android.builtInKotlin=false` y el plugin Kotlin explícito mantienen compatibilidad con los plugins Android de Flutter que todavía aplican Kotlin por separado.
+La navegación inicia en Armario. Sus tarjetas muestran fotos y un botón de acciones. El nombre sigue disponible para accesibilidad mediante `Semantics` y la pulsación larga también abre el menú. `matchesCategoryGroup` agrupa Abrigos dentro de Parte superior para la UI; `roleOf` sigue distinguiendo exterior en las reglas de outfits. La revisión prioriza foto, nombre y tipo, permite ampliar la foto y divide datos opcionales en cuatro ExpansionTile hermanos con ancho completo. Los textos de progreso distinguen análisis, recorte y guardado. `android.builtInKotlin=false` y el plugin Kotlin explícito mantienen compatibilidad con los plugins Android de Flutter que todavía aplican Kotlin por separado.
 
 `BackupScreen` gestiona carga, bloqueo durante exportación/restauración y actualización del recordatorio con su propio State. El traslado a Más herramientas no depende del State de la ruta anterior.
 
@@ -123,3 +123,12 @@ La navegación inicia en Hoy y su cuadrícula contiene solo fotos, con nombres a
 `OutfitEditor` conserva dos listas sincronizadas por `garmentId`: `items` (Libre) y `mannequinItems` (Maniquí). Se guardan en un solo objeto `OutfitItem` usando `x`, `y`, `scale` y `mannequinX`, `mannequinY`, `mannequinScale`. `OutfitBoard` utiliza `AutoFramedPhoto` para el encuadre visual de las prendas sin modificar el archivo original. El selector `_GarmentPicker` permite búsqueda y filtrado por categorías.
 
 La base SQLite sube a versión 6. Una migración añade `mannequin_x`, `mannequin_y` y `mannequin_scale` a `outfit_items` sin eliminar columnas ni registros existentes. Los outfits anteriores obtienen valores predeterminados para Maniquí; se puede usar «Recolocar» para distribuirlos. La exportación de imagen sigue tomando la vista activa. El orden de capas se calcula automáticamente al añadir según el subtipo de prenda, y «Traer al frente» permite modificarlo manualmente.
+
+## Versión 1.7.8
+
+- **SQLite y editor de outfits.** El esquema 7 distingue una disposición Maniquí pendiente mediante `OutfitItem.unsetMannequinX`. En bases anteriores al esquema 6, la columna se añade con ese valor. Al actualizar desde el esquema 6 se marcan los outfits cuyas prendas tienen todas el trío exacto de valores predeterminados anteriores (`0.3, 0.2, 1.0`). La versión 6 no guardaba si esos valores se eligieron manualmente. Si alguna prenda tiene otros valores, se conserva todo el conjunto. El editor calcula la disposición pendiente por tipo y materializa las coordenadas al guardar.
+- **Orden de capas.** La posición de capa es común a Libre y Maniquí, mientras que las coordenadas y la escala son independientes. El editor reordena y borra por `garmentId`, y la inserción de una nueva prenda conserva el orden relativo de las existentes. El formulario admite un nombre de outfit opcional y sugiere uno al guardar si está vacío.
+- **Copias de seguridad.** El manifiesto exporta la versión 6 con `mannequin_x`, `mannequin_y` y `mannequin_scale`. Los formatos 1 a 5 se normalizan antes del reemplazo transaccional. En formato 5 se aceptan tanto filas antiguas como filas de la 1.7.7 con los tres campos. Se validan juntos y se acepta el valor de escala 1,9 que genera Ideas para vestidos.
+- **Importación.** `BatchImportScreen` mantiene una cola local, invoca el análisis nativo de forma secuencial y permite confirmar el tipo o abrir la ficha individual con los valores comunes. Cada alta persiste su foto y su fila por separado. Si falla una fila, la cola identifica el error, conserva las altas anteriores y reintenta solo las pendientes. `PhotoAnalysis` comparte con el editor el criterio de revisión. La comprobación visual de duplicados sigue disponible en la ficha individual.
+- **Armario e Ideas.** El menú contextual de cada tarjeta admite botón y pulsación larga. Los filtros secundarios se muestran como etiquetas eliminables. Ideas destaca los motivos del cálculo y facilita la revisión de fichas, exclusiones u ocasión. El análisis de fotos y el almacenamiento siguen siendo locales. Se conserva la previsión meteorológica opcional mediante Open-Meteo.
+- **Validación.** El flujo `.github/workflows/flutter.yml` usa Flutter 3.47.7, el archivo de dependencias bloqueadas, análisis estático y pruebas. La firma y la actualización física requieren el entorno Android y la clave privada que ya utiliza el proyecto.
